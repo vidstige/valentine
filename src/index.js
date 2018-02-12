@@ -1,17 +1,17 @@
 require("../style.css");
 const heart = require('../static/heart.png');
 
-function main() {
-    var c = document.getElementById("target");
-    var ctx = c.getContext("2d");
-    var img = new Image();
-    img.onload = function() {
-        ctx.drawImage(img, 0, 0);
-    };
+function start(img) {
+    const c = document.getElementById("target");
+    const ctx = c.getContext("2d");
+    ctx.drawImage(img, 0, 0);
+}
+
+function load() {
+    const img = new Image();
+    img.onload = function() { start(this); };
     img.src = heart;
 }
 
-document.addEventListener("DOMContentLoaded", function(event) { 
-    main();
-});
+document.addEventListener("DOMContentLoaded", load);
 
