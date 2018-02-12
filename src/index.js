@@ -1,6 +1,11 @@
 require("../style.css");
 const heart = require('../static/heart.png');
 
+function color2obj(color) {
+    const rgb = color.match(/\d+/g);
+    return {r: rgb[0], g: rgb[1], b: rgb[2]};
+}
+
 function start(image) {
     const canvas = document.getElementById("target");
     const ctx = canvas.getContext("2d");
@@ -27,6 +32,8 @@ function start(image) {
             }
         }
     }
+
+    const foreground = color2obj(getComputedStyle(canvas).color);
     
     function f(t, duration, cutoff) {
         const rt = (t % duration) / duration;
@@ -52,9 +59,9 @@ function start(image) {
             const y = cy + py + Math.sin(alpha) * 400 * ry;
             const a = particles[i].a;
             const offset = 4 * (Math.trunc(x) + Math.trunc(y) * backbuffer.width);
-            backbuffer.data[offset + 0] = 0xd3;
-            backbuffer.data[offset + 1] = 0x17;
-            backbuffer.data[offset + 2] = 0xe8;
+            backbuffer.data[offset + 0] = foreground.r;
+            backbuffer.data[offset + 1] = foreground.g;
+            backbuffer.data[offset + 2] = foreground.b;
             backbuffer.data[offset + 3] = a;
             
         }
