@@ -84,11 +84,11 @@ function start(image1, image2) {
         const cx2 = (backbuffer.width - image2.width) / 2;
         const cy2 = (backbuffer.height - image2.height) / 2;
 
-        const duration = 4000;
+        const duration = 2000;
         
         for (var i = 0; i < p1.length; i++) {
             const j = mapping[i];
-            const k = (Math.sin(t / 500) + 1)/2;
+            const k = (Math.sin(2*Math.PI * t / duration) + 1) / 2;
             const x = lerp(cx2+p2[j].x, cx1+p1[i].x, k);
             const y = lerp(cy2+p2[j].y, cy1+p1[i].y, k);
             const a = lerp(p2[j].a, p1[i].a, k);
