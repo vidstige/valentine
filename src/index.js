@@ -75,6 +75,13 @@ function start(image1, image2) {
    
     const mapping = getRandomMapping(p1.length, p2.length);
 
+    const swirl_x = Array.apply(null, Array(p1.length)).map(function() {
+            return Math.random() - 0.5;
+        });
+    const swirl_y = Array.apply(null, Array(p1.length)).map(function() {
+            return Math.random() - 0.5;
+        });
+
     function f(t) {
         const cutoff = 0.4;
         if (t < cutoff) {
@@ -91,6 +98,9 @@ function start(image1, image2) {
         }
         return 1 - ((t - 0.5) * 2);
     }
+    function bezier(a, b, c, t) {
+        return (1-t)*(1-t)*a + 2*(1-t)*t*b + t*t*c;
+    }
 
     function animate(t) {
         const backbuffer = new ImageData(canvas.width, canvas.height);
@@ -99,7 +109,7 @@ function start(image1, image2) {
         const cx2 = (backbuffer.width - image2.width) / 2;
         const cy2 = (backbuffer.height - image2.height) / 2;
 
-        const duration = 5000;
+        const duration = 6000;
         
         for (var i = 0; i < p1.length; i++) {
             const j = mapping[i];
@@ -108,9 +118,11 @@ function start(image1, image2) {
             const rt = ((t + phase) % duration) / duration;
             //const k = (Math.cos(2 * Math.PI * f(t + phase, duration, 0.2)) + 1) / 2;
             const k = f(reverse(rt + phase));
-            const x = lerp(cx2+p2[j].x, cx1+p1[i].x, k);
-            const y = lerp(cy2+p2[j].y, cy1+p1[i].y, k);
-            const a = lerp(p2[j].a, p1[i].a, k);
+            //const x = lerp(cx2+p2[j].x, cx1+p1[i].x, k);
+            //const y = lerp(cy2+p2[j].y, cy1+p1[i].y, k);
+            const x = bezier(cx2+p2[j].x, backbuffer.width/2 + swirl_x[i] * 140, cx1+p1[i].x, k)
+            const y = bezier(cy2+p2[j].y, backbuffer.height/2 + swirl_y[i] * 280, cy1+p1[i].y, k)
+            const a = lerp(p1[i].a, p2[j].a, k);
             const k2 = 1.0 - (Math.cos(2* Math.PI * k) + 1) / 2;
 
             const offset = 4 * (Math.trunc(x) + Math.trunc(y) * backbuffer.width);
