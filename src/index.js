@@ -58,22 +58,16 @@ function lerp(a, b, t) {
     return a * t + b * (1-t);
 }
 
-function start(image, image2) {
+function start(image1, image2) {
     const canvas = document.getElementById("target");
     const ctx = canvas.getContext("2d");
 
     const foreground = color2obj(getComputedStyle(canvas).color);
     
-    const particles = getParticles(ctx, image);
-    for (var i = 0; i < particles.length; i++) {
-        particles[i].rx = Math.random() - 0.5;
-        particles[i].ry = Math.random() - 0.5;
-    }
-    const particles2 = getParticles(ctx, image2);
-    console.log(particles.length, particles2.length);
-    
-    const mapping = getRandomMapping(particles.length, particles2.length);
-    console.log(mapping);
+    const p1 = getParticles(ctx, image1);
+    const p2 = getParticles(ctx, image2);
+   
+    const mapping = getRandomMapping(p1.length, p2.length);
 
     function f(t, duration, cutoff) {
         const rt = (t % duration) / duration;
@@ -85,24 +79,19 @@ function start(image, image2) {
 
     function animate(t) {
         const backbuffer = new ImageData(canvas.width, canvas.height);
-        const cx = (backbuffer.width - image.width) / 2;
-        const cy = (backbuffer.height - image.height) / 2;
+        const cx1 = (backbuffer.width - image1.width) / 2;
+        const cy1 = (backbuffer.height - image1.height) / 2;
+        const cx2 = (backbuffer.width - image2.width) / 2;
+        const cy2 = (backbuffer.height - image2.height) / 2;
+
         const duration = 4000;
         
-        for (var i = 0; i < particles.length; i++) {
-            const px = particles[i].x;
-            const py = particles[i].y;
-            const rx = particles[i].rx;
-            const ry = particles[i].ry;
-            const phase = -px * 10;
-
+        for (var i = 0; i < p1.length; i++) {
             const j = mapping[i];
-            const px2 = particles2[j].x;
-            const py2 = particles2[j].y;
-            const k = (Math.sin(t / 1000) + 1)/2;
-            const x = cx + lerp(px2, px, k);
-            const y = cy + lerp(py2, py, k);
-            const a = lerp(particles2[j].a, particles[i].a, k);
+            const k = (Math.sin(t / 500) + 1)/2;
+            const x = lerp(cx2+p2[j].x, cx1+p1[i].x, k);
+            const y = lerp(cy2+p2[j].y, cy1+p1[i].y, k);
+            const a = lerp(p2[j].a, p1[i].a, k);
 
             const offset = 4 * (Math.trunc(x) + Math.trunc(y) * backbuffer.width);
             backbuffer.data[offset + 0] = foreground.r;
