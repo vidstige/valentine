@@ -69,12 +69,21 @@ function start(image1, image2) {
    
     const mapping = getRandomMapping(p1.length, p2.length);
 
-    function f(t, duration, cutoff) {
-        const rt = (t % duration) / duration;
-        if (rt < cutoff) {
-            return rt / cutoff;
+    function f(t) {
+        const cutoff = 0.3;
+        if (t < cutoff) {
+            return 0;
         }
-        return 0;
+        if (t > 1.0 - cutoff) {
+            return 1;
+        }
+        return (t - cutoff) / (1.0 - 2 * cutoff);
+    }
+    function reverse(t) {
+        if (t < 0.5) {
+            return t * 2;
+        }
+        return 1 - ((t - 0.5) * 2);
     }
 
     function animate(t) {
@@ -84,11 +93,15 @@ function start(image1, image2) {
         const cx2 = (backbuffer.width - image2.width) / 2;
         const cy2 = (backbuffer.height - image2.height) / 2;
 
-        const duration = 2000;
+        const duration = 5000;
         
         for (var i = 0; i < p1.length; i++) {
             const j = mapping[i];
-            const k = (Math.sin(2*Math.PI * t / duration) + 1) / 2;
+            const phase = -p1[i].x / 900;
+            //const phase = 0;
+            const rt = ((t + phase) % duration) / duration;
+            //const k = (Math.cos(2 * Math.PI * f(t + phase, duration, 0.2)) + 1) / 2;
+            const k = f(reverse(rt + phase));
             const x = lerp(cx2+p2[j].x, cx1+p1[i].x, k);
             const y = lerp(cy2+p2[j].y, cy1+p1[i].y, k);
             const a = lerp(p2[j].a, p1[i].a, k);
@@ -98,7 +111,6 @@ function start(image1, image2) {
             backbuffer.data[offset + 1] = foreground.g;
             backbuffer.data[offset + 2] = foreground.b;
             backbuffer.data[offset + 3] = a;
-            
         }
         ctx.putImageData(backbuffer, 0, 0);
         requestAnimationFrame(animate);
