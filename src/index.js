@@ -76,7 +76,7 @@ function start(image1, image2) {
     const mapping = getRandomMapping(p1.length, p2.length);
 
     function f(t) {
-        const cutoff = 0.3;
+        const cutoff = 0.4;
         if (t < cutoff) {
             return 0;
         }
@@ -103,7 +103,7 @@ function start(image1, image2) {
         
         for (var i = 0; i < p1.length; i++) {
             const j = mapping[i];
-            const phase = -p1[i].x / 900;
+            const phase = -p1[i].x / 800;
             //const phase = 0;
             const rt = ((t + phase) % duration) / duration;
             //const k = (Math.cos(2 * Math.PI * f(t + phase, duration, 0.2)) + 1) / 2;
