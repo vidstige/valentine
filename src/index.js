@@ -1,5 +1,6 @@
 require("../style.css");
-const heart = require('../static/heart.png');
+//const heart = require('../static/heart.png');
+const volumental = require('../static/volumental.png');
 
 function color2obj(color) {
     const rgb = color.match(/\d+/g);
@@ -12,7 +13,7 @@ function start(image) {
     
     // Get image data
     ctx.drawImage(image, 0, 0);
-    const img = ctx.getImageData(0, 0, 128, 128);
+    const img = ctx.getImageData(0, 0, image.width, image.height);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Convert to coordinates
@@ -72,10 +73,12 @@ function start(image) {
 }
 
 function load() {
-    const img = new Image();
-    img.onload = function() { start(this); };
-    img.src = heart;
+    const images = [volumental];
+    for (var i = 0; i < images.length; i++) {
+        const img = new Image();
+        img.onload = function() { start(this); };
+        img.src = images[i];
+    }
 }
 
 document.addEventListener("DOMContentLoaded", load);
-
