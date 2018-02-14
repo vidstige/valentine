@@ -63,7 +63,13 @@ function start(image1, image2) {
     const ctx = canvas.getContext("2d");
 
     const foreground = color2obj(getComputedStyle(canvas).color);
-    
+    const white = {r: 255, g: 255, b: 255};
+    const hilite = {
+        r: lerp(foreground.r, white.r, 0.6),
+        g: lerp(foreground.g, white.r, 0.6),
+        b: lerp(foreground.b, white.r, 0.6),
+    };
+
     const p1 = getParticles(ctx, image1);
     const p2 = getParticles(ctx, image2);
    
@@ -105,11 +111,12 @@ function start(image1, image2) {
             const x = lerp(cx2+p2[j].x, cx1+p1[i].x, k);
             const y = lerp(cy2+p2[j].y, cy1+p1[i].y, k);
             const a = lerp(p2[j].a, p1[i].a, k);
+            const k2 = 1.0 - (Math.cos(2* Math.PI * k) + 1) / 2;
 
             const offset = 4 * (Math.trunc(x) + Math.trunc(y) * backbuffer.width);
-            backbuffer.data[offset + 0] = foreground.r;
-            backbuffer.data[offset + 1] = foreground.g;
-            backbuffer.data[offset + 2] = foreground.b;
+            backbuffer.data[offset + 0] = lerp(hilite.r, foreground.r, k2);
+            backbuffer.data[offset + 1] = lerp(hilite.g, foreground.g, k2);
+            backbuffer.data[offset + 2] = lerp(hilite.b, foreground.b, k2);
             backbuffer.data[offset + 3] = a;
         }
         ctx.putImageData(backbuffer, 0, 0);
