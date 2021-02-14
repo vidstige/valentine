@@ -97,15 +97,17 @@ void destroy_image(const image *image) {
     free(image->buffer);
 }
 
-void load_rgba(const image *image, const char* filename) {
+image load_rgba(const char* filename, size_t width, size_t height) {
+    image image = create_image(width, height);
     FILE *fp;
     fp = fopen(filename, "r");
     if (!fp) {
         fprintf(stderr, "Could not open '%s': %s\n", filename, strerror(errno));
         exit(-1);
     }
-    fread(image->buffer, sizeof(uint32_t), image_pixel_count(image), fp);
+    fread(image.buffer, sizeof(uint32_t), image_pixel_count(&image), fp);
     fclose(fp);
+    return image;
 }
 
 color_t blend_color(color_t c1, color_t c2) {
@@ -154,8 +156,7 @@ int main() {
     const float visc = 1, diff = 1;
     const float dt = 0.1;
     image buffer = create_image(506, 253);
-    const image im = create_image(N, N);
-    load_rgba(&im, "hearth.bgra");
+    const image im = load_rgba("hearth.bgra", N, N);
     for (size_t frame = 0; frame < 1000; frame++) {
         clear(&buffer, 0xff222222);
         blit(&buffer, &im, center(buffer.resolution, im.resolution));
@@ -165,5 +166,6 @@ int main() {
         //draw_dens(buffer, N, dens);
         fwrite(buffer.buffer, sizeof(uint32_t), image_pixel_count(&buffer), stdout);
     }
+    destroy_image(&im);
     destroy_image(&buffer);
 }
