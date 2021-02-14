@@ -82,6 +82,12 @@ array2f create_array2f(size_t width, size_t height) {
 void destroy_array2f(const array2f *array) {
     free(array->buffer);
 }
+float array2f_get(const array2f *array, size_t x, size_t y) {
+    return array->buffer[y * array->stride + x];
+}
+void array2f_set(const array2f *array, size_t x, size_t y, float value) {
+    array->buffer[y * array->stride + x] = value;
+}
 
 // Sub-array by padding
 array2f array2f_pad(const array2f *array, size_t pad_x, size_t pad_y) {
@@ -93,6 +99,25 @@ array2f array2f_pad(const array2f *array, size_t pad_x, size_t pad_y) {
     return a;
 }
 
+void convolution(const array2f *source, const array2f *kernel, const array2f *target) {
+    assert(source->resolution.width == target->resolution.width);
+    assert(source->resolution.height == target->resolution.height);
+    assert(kernel->resolution.width % 2 == 1);
+    assert(kernel->resolution.height % 2 == 1);
+    const size_t half_x = kernel->resolution.width / 2;
+    const size_t half_y = kernel->resolution.height / 2;
+    for (size_t x = half_x; x < source->resolution.width - half_x; x++) {
+        for (size_t y = half_y; y < source->resolution.height - half_y; y++) {
+            float tmp = 0;
+            for (size_t kx = 0; kx < kernel->resolution.width; kx++) {
+                for (size_t ky = 0; ky < kernel->resolution.height; ky++) {
+                    tmp += array2f_get(kernel, kx, ky) * array2f_get(source, x + kx - half_x, y + ky - half_y);
+                }
+            }
+            array2f_set(target, x, y, tmp);
+        }
+    }
+}
 
 float highf(float* array, size_t n) {
     float tmp = -INFINITY;
