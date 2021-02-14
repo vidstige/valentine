@@ -63,6 +63,37 @@ size_t get_alpha(color_t color) {
     return (color >> 24) & 0xff; 
 }
 
+// array 2f
+typedef struct {
+    float *buffer;
+    resolution_t resolution;
+    size_t stride;
+} array2f;
+
+array2f create_array2f(size_t width, size_t height) {
+    array2f array;
+    array.buffer = malloc(sizeof(float) * width * height);
+    array.resolution.width = width;
+    array.resolution.height = height;
+    array.stride = width;
+    return array;
+}
+
+void destroy_array2f(const array2f *array) {
+    free(array->buffer);
+}
+
+// Sub-array by padding
+array2f array2f_pad(const array2f *array, size_t pad_x, size_t pad_y) {
+    array2f a;
+    a.stride = array->stride;
+    a.buffer = array->buffer + pad_y * a.stride + pad_x;
+    a.resolution.width = array->resolution.width - 2 * pad_x;
+    a.resolution.height = array->resolution.height - 2* pad_y;
+    return a;
+}
+
+
 float highf(float* array, size_t n) {
     float tmp = -INFINITY;
     for (size_t i = 0; i < n; i++) {
@@ -204,6 +235,7 @@ void fillf(float *a, size_t N, float value) {
         }
     }
 }
+
 int main() {
     const size_t N = 100;
     const size_t size=(N+2)*(N+2);
