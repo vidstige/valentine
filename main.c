@@ -185,11 +185,16 @@ void dens_from_alpha(const image *image, float *dens, size_t N) {
     }
 }
 
-void flow(float *u, float *v, float uu, float vv, size_t N) {
+float randf() {
+    return (float)rand() / RAND_MAX;
+}
+
+void flow(float *u, float *v, float uu, float vv, float ju, float jv, size_t N) {
+    
     size_t y = N;
     for (size_t x = 1; x < N+1; x++) {
-        u[(N+2) * y + x + 1] = uu;
-        v[(N+2) * y + x + 1] = vv;
+        u[(N+2) * y + x + 1] = uu + ju * (randf() - 0.5f);
+        v[(N+2) * y + x + 1] = vv + jv * (randf() - 0.5f);
     }
 }
 
@@ -201,23 +206,26 @@ int main() {
     for (size_t i = 0; i < size; i++) {
         u[i] = v[i] = u_prev[i] = v_prev[i] = dens[i] = dens_prev[i] = 0.0f;
     }
-    const float visc = 0.1, diff = 0.001;
-    const float dt = 0.001;
+    const float visc = 0.001, diff = 0.01;
+    const float dt = 0.01;
     image screen = create_image(506, 253);
-    const image im = load_rgba("hearth.bgra", N, N);
+    const image im = load_rgba("hearth.bgra", 100, 100);
     
     dens_from_alpha(&im, dens, N);
-    flow(u_prev, v_prev, 5, -5.0f / dt, N);
+    //flow(u_prev, v_prev, 5 / dt, 5.0f / dt, N);
+    
     //image_scale
     const image dens_im = create_image(N, N);
     for (size_t frame = 0; frame < 1000; frame++) {
+        flow(u, v, 0, -50.f, 5, 10, N);
+
         clear(&screen, 0xff222222);
         //get_from_UI ( dens_prev, u_prev, v_prev );
         vel_step(N, u, v, u_prev, v_prev, visc, dt);
         dens_step(N, dens, dens_prev, u, v, diff, dt);
         draw_dens(&dens_im, N, dens);
         image_scale(&screen, &dens_im);
-        blit(&screen, &im, center(screen.resolution, im.resolution));
+        //blit(&screen, &im, center(screen.resolution, im.resolution));
         fwrite(screen.buffer, sizeof(uint32_t), image_pixel_count(&screen), stdout);
     }
     destroy_image(&dens_im);
