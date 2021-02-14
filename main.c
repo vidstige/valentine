@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -38,6 +39,9 @@ size_t image_width(const image *image) {
 size_t image_height(const image *image) {
     return image->resolution.height;
 }
+color_t image_pixel(const image *image, size_t x, size_t y) {
+    return image->buffer[y * image->stride + x];
+}
 
 void clear(const image *image, color_t color) {
     size_t i;
@@ -55,6 +59,10 @@ color_t rgbf(float r, float g, float b) {
     return rgb((uint32_t)(r * 255), (uint32_t)(g * 255), (uint32_t)(b * 255));
 }
 
+size_t get_alpha(color_t color) {
+    return (color >> 24) & 0xff; 
+}
+
 float highf(float* array, size_t n) {
     float tmp = -INFINITY;
     for (size_t i = 0; i < n; i++) {
@@ -70,16 +78,23 @@ float lowf(float* array, size_t n) {
     return tmp;
 }
 
+size_t clamp(size_t x, size_t lo, size_t hi) {
+    if (x < lo) return lo;
+    if (x > hi) return hi;
+    return x;
+}
+
 void draw_dens(const image *image, size_t N, float *dens) {
+    assert(N <= image_width(image));
+    assert(N <= image_height(image));
     const size_t size=(N+2)*(N+2);
     float hi = highf(dens, size);
     float lo = lowf(dens, size);
-    for (size_t y = 0; y < image_height(image); y++) {
-        for (size_t x = 0; x < image_width(image); x++) {
-            size_t dx = x * N / image_width(image) + 1;
-            size_t dy = y * N / image_height(image) + 1;
-            float d = dens[dx + dy * (N + 2)];
-            uint32_t intensity = (uint32_t)(255.0f*(d - lo / (hi - lo)));
+    for (size_t y = 0; y < N; y++) {
+        for (size_t x = 0; x < N; x++) {
+            float d = dens[x + y * (N+2) + 1];
+            //uint32_t intensity = clamp((uint32_t)(255.0f * ((d - lo) / (hi - lo))), 0, 255);
+            uint32_t intensity = (uint32_t)(128.0f * ((d - lo) / (hi - lo)));
             image->buffer[x + y * image->stride] = rgbf(intensity, intensity, intensity);
         }
     }
@@ -141,6 +156,18 @@ void blit(const image *target, const image *source, position_t position) {
         }
     }
 }
+
+void image_scale(const image *target, const image *source) {
+    for (size_t ty = 0; ty < image_height(target); ty++) {
+        for (size_t tx = 0; tx < image_width(target); tx++) {
+            const size_t sx = tx * image_width(source) / image_width(target);
+            const size_t sy = ty * image_height(source) / image_height(target);
+            const color_t color = source->buffer[sx + sy * source->stride];
+            target->buffer[tx + ty * target->stride] = color;
+        }
+    }
+}
+
 position_t center(resolution_t outer, resolution_t inner) {
     position_t p;
     p.x = (outer.width - inner.width) / 2;
@@ -148,24 +175,52 @@ position_t center(resolution_t outer, resolution_t inner) {
     return p;
 }
 
+void dens_from_alpha(const image *image, float *dens, size_t N) {
+    for (size_t y = 0; y < image_height(image); y++) {
+        for (size_t x = 0; x < image_width(image); x++) {
+            const color_t color = image_pixel(image, x, y);
+            const size_t alpha = get_alpha(color);
+            dens[y * (N+2) + x + 1] = alpha;
+        }
+    }
+}
+
+void flow(float *u, float *v, float uu, float vv, size_t N) {
+    size_t y = N;
+    for (size_t x = 1; x < N+1; x++) {
+        u[(N+2) * y + x + 1] = uu;
+        v[(N+2) * y + x + 1] = vv;
+    }
+}
+
 int main() {
     const size_t N = 100;
     const size_t size=(N+2)*(N+2);
     float u[size], v[size], u_prev[size], v_prev[size];
-    float dens[size], dens_prev[size]; 
-    const float visc = 1, diff = 1;
-    const float dt = 0.1;
-    image buffer = create_image(506, 253);
-    const image im = load_rgba("hearth.bgra", N, N);
-    for (size_t frame = 0; frame < 1000; frame++) {
-        clear(&buffer, 0xff222222);
-        blit(&buffer, &im, center(buffer.resolution, im.resolution));
-        //get_from_UI ( dens_prev, u_prev, v_prev );
-        //vel_step(N, u, v, u_prev, v_prev, visc, dt);
-        //dens_step(N, dens, dens_prev, u, v, diff, dt);
-        //draw_dens(buffer, N, dens);
-        fwrite(buffer.buffer, sizeof(uint32_t), image_pixel_count(&buffer), stdout);
+    float dens[size], dens_prev[size];
+    for (size_t i = 0; i < size; i++) {
+        u[i] = v[i] = u_prev[i] = v_prev[i] = dens[i] = dens_prev[i] = 0.0f;
     }
+    const float visc = 0.1, diff = 0.001;
+    const float dt = 0.001;
+    image screen = create_image(506, 253);
+    const image im = load_rgba("hearth.bgra", N, N);
+    
+    dens_from_alpha(&im, dens, N);
+    flow(u_prev, v_prev, 5, -5.0f / dt, N);
+    //image_scale
+    const image dens_im = create_image(N, N);
+    for (size_t frame = 0; frame < 1000; frame++) {
+        clear(&screen, 0xff222222);
+        //get_from_UI ( dens_prev, u_prev, v_prev );
+        vel_step(N, u, v, u_prev, v_prev, visc, dt);
+        dens_step(N, dens, dens_prev, u, v, diff, dt);
+        draw_dens(&dens_im, N, dens);
+        image_scale(&screen, &dens_im);
+        blit(&screen, &im, center(screen.resolution, im.resolution));
+        fwrite(screen.buffer, sizeof(uint32_t), image_pixel_count(&screen), stdout);
+    }
+    destroy_image(&dens_im);
     destroy_image(&im);
-    destroy_image(&buffer);
+    destroy_image(&screen);
 }
