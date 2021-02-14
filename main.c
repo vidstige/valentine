@@ -94,7 +94,7 @@ void draw_dens(const image *image, size_t N, float *dens) {
         for (size_t x = 0; x < N; x++) {
             float d = dens[x + y * (N+2) + 1];
             //uint32_t intensity = clamp((uint32_t)(255.0f * ((d - lo) / (hi - lo))), 0, 255);
-            uint32_t intensity = (uint32_t)(128.0f * ((d - lo) / (hi - lo)));
+            uint32_t intensity = clamp((uint32_t)(255.0f * ((d - lo) / (hi - lo))), 0, 255);
             image->buffer[x + y * image->stride] = rgbf(intensity, intensity, intensity);
         }
     }
@@ -186,38 +186,45 @@ void dens_from_alpha(const image *image, float *dens, size_t N) {
 }
 
 float randf() {
-    return (float)rand() / RAND_MAX;
+    return (float)rand() / (float)RAND_MAX;
 }
 
 void flow(float *u, float *v, float uu, float vv, float ju, float jv, size_t N) {
-    
-    size_t y = N;
+    size_t y = N-1;
     for (size_t x = 1; x < N+1; x++) {
         u[(N+2) * y + x + 1] = uu + ju * (randf() - 0.5f);
         v[(N+2) * y + x + 1] = vv + jv * (randf() - 0.5f);
     }
 }
 
+void fillf(float *a, size_t N, float value) {
+    for (size_t y = 1; y < N + 1; y++) {
+        for (size_t x = 1; x < N + 1; x++) {
+            a[y * (N+2) + x + 1] = randf() * value;
+        }
+    }
+}
 int main() {
     const size_t N = 100;
     const size_t size=(N+2)*(N+2);
     float u[size], v[size], u_prev[size], v_prev[size];
     float dens[size], dens_prev[size];
     for (size_t i = 0; i < size; i++) {
-        u[i] = v[i] = u_prev[i] = v_prev[i] = dens[i] = dens_prev[i] = 0.0f;
+        u[i] = v[i] = u_prev[i] = v_prev[i] = dens_prev[i] = dens[i] = 0.0f;
     }
     const float visc = 0.001, diff = 0.01;
     const float dt = 0.01;
     image screen = create_image(506, 253);
     const image im = load_rgba("hearth.bgra", 100, 100);
     
-    dens_from_alpha(&im, dens, N);
+    fillf(dens, N, 1.0f);
+    //dens_from_alpha(&im, dens, N);
     //flow(u_prev, v_prev, 5 / dt, 5.0f / dt, N);
     
     //image_scale
     const image dens_im = create_image(N, N);
     for (size_t frame = 0; frame < 1000; frame++) {
-        flow(u, v, 0, -50.f, 5, 10, N);
+        flow(u, v, 0, -25.f, 5, 15, N);
 
         clear(&screen, 0xff222222);
         //get_from_UI ( dens_prev, u_prev, v_prev );
