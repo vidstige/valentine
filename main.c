@@ -288,7 +288,8 @@ int main() {
     image screen = create_image(506, 253);
     const image im = load_rgba("hearth.bgra", 100, 100);
     
-    dens_from_alpha(&im, dens.buffer, N);
+    array2f_rand(array2f_pad(&dens, 2, 2), 1);
+    //dens_from_alpha(&im, dens.buffer, N);
     
     //image_scale
     const image dens_im = create_image(N, N);
