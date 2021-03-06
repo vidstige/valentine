@@ -126,6 +126,7 @@ float highf(float* array, size_t n) {
     }
     return tmp;
 }
+
 float lowf(float* array, size_t n) {
     float tmp = INFINITY;
     for (size_t i = 0; i < n; i++) {
@@ -140,15 +141,14 @@ size_t clamp(size_t x, size_t lo, size_t hi) {
     return x;
 }
 
-void draw_dens(const image *image, size_t N, float *dens) {
-    assert(N <= image_width(image));
-    assert(N <= image_height(image));
-    const size_t size=(N+2)*(N+2);
+void draw_dens(const image *image, array2f dens) {
+    assert(dens.resolution.width <= image_width(image));
+    assert(dens.resolution.height <= image_height(image));
     //float hi = highf(dens, size), lo = lowf(dens, size);
     float hi = 1, lo = 0;
-    for (size_t y = 0; y < N; y++) {
-        for (size_t x = 0; x < N; x++) {
-            float d = dens[x + y * (N+2) + 1];
+    for (size_t y = 0; y < dens.resolution.height; y++) {
+        for (size_t x = 0; x < dens.resolution.width; x++) {
+            float d = dens.buffer[x + y * dens.stride];
             //uint32_t intensity = clamp((uint32_t)(255.0f * ((d - lo) / (hi - lo))), 0, 255);
             uint32_t intensity = clamp((uint32_t)(255.0f * ((d - lo) / (hi - lo))), 0, 255);
             image->buffer[x + y * image->stride] = rgb(intensity, intensity, intensity);
@@ -273,7 +273,7 @@ void array2f_rand(array2f a, float amplitude) {
 }
 int main() {
     const size_t N = 100;
-    const size_t size=(N+2)*(N+2);
+//    const size_t size=(N+2)*(N+2);
 
     array2f u = create_array2f(N + 2, N + 2); array2f_fill(u, 0.f);
     array2f v = create_array2f(N + 2, N + 2); array2f_fill(v, 0.f);
@@ -301,7 +301,7 @@ int main() {
         //get_from_UI ( dens_prev, u_prev, v_prev );
         vel_step(N, u.buffer, v.buffer, u_prev.buffer, v_prev.buffer, visc, dt);
         dens_step(N, dens.buffer, dens_prev.buffer, u.buffer, v.buffer, diff, dt);
-        draw_dens(&dens_im, N, dens.buffer);
+        draw_dens(&dens_im, array2f_pad(&dens, 1, 1));
         image_scale(&screen, &dens_im);
         //blit(&screen, &im, center(screen.resolution, im.resolution));
         fwrite(screen.buffer, sizeof(uint32_t), image_pixel_count(&screen), stdout);
