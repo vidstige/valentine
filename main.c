@@ -276,29 +276,34 @@ void array2f_rand(array2f a, float amplitude) {
 int main() {
     const size_t N = 100;
     const size_t size=(N+2)*(N+2);
-    float u[size], v[size], u_prev[size], v_prev[size];
-    float dens[size], dens_prev[size];
-    for (size_t i = 0; i < size; i++) {
-        u[i] = v[i] = u_prev[i] = v_prev[i] = dens_prev[i] = dens[i] = 0.0f;
-    }
+    //float u[size], v[size], u_prev[size], v_prev[size];
+    //float dens[size], dens_prev[size];
+    array2f u = create_array2f(N + 2, N + 2); array2f_fill(u, 0.f);
+    array2f v = create_array2f(N + 2, N + 2); array2f_fill(v, 0.f);
+    array2f u_prev = create_array2f(N + 2, N + 2); array2f_fill(u_prev, 0.f);
+    array2f v_prev = create_array2f(N + 2, N + 2); array2f_fill(v_prev, 0.f);
+    
+    array2f dens = create_array2f(N + 2, N + 2); array2f_fill(dens, 0.f);
+    array2f dens_prev = create_array2f(N + 2, N + 2); array2f_fill(dens_prev, 0.f);
+
     const float visc = 0.001, diff = 0.0;
     const float dt = 0.01;
     image screen = create_image(506, 253);
     const image im = load_rgba("hearth.bgra", 100, 100);
     
-    dens_from_alpha(&im, dens, N);
+    dens_from_alpha(&im, dens.buffer, N);
     //flow(u_prev, v_prev, 5 / dt, 5.0f / dt, N);
     
     //image_scale
     const image dens_im = create_image(N, N);
     for (size_t frame = 0; frame < 1000; frame++) {
-        flow(u, v, 0, -15.f, 15, 15, N);
+        flow(u.buffer, v.buffer, 0, -15.f, 15, 15, N);
 
         clear(&screen, 0xff222222);
         //get_from_UI ( dens_prev, u_prev, v_prev );
-        vel_step(N, u, v, u_prev, v_prev, visc, dt);
-        dens_step(N, dens, dens_prev, u, v, diff, dt);
-        draw_dens(&dens_im, N, dens);
+        vel_step(N, u.buffer, v.buffer, u_prev.buffer, v_prev.buffer, visc, dt);
+        dens_step(N, dens.buffer, dens_prev.buffer, u.buffer, v.buffer, diff, dt);
+        draw_dens(&dens_im, N, dens.buffer);
         image_scale(&screen, &dens_im);
         //blit(&screen, &im, center(screen.resolution, im.resolution));
         fwrite(screen.buffer, sizeof(uint32_t), image_pixel_count(&screen), stdout);
@@ -306,4 +311,11 @@ int main() {
     destroy_image(&dens_im);
     destroy_image(&im);
     destroy_image(&screen);
+
+    destroy_array2f(&u);
+    destroy_array2f(&v);
+    destroy_array2f(&u_prev);
+    destroy_array2f(&v_prev);
+    destroy_array2f(&dens);
+    destroy_array2f(&dens_prev);
 }
