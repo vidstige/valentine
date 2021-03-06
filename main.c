@@ -246,11 +246,9 @@ float randf() {
     return (float)rand() / (float)RAND_MAX;
 }
 
-void flow(float *u, float *v, float uu, float vv, float ju, float jv, size_t N) {
-    size_t y = N - 10;
-    for (size_t x = 1; x < N+1; x++) {
-        u[(N+2) * y + x + 1] = uu + ju * (randf() - 0.5f);
-        v[(N+2) * y + x + 1] = vv + jv * (randf() - 0.5f);
+void flow(array2f a, size_t y, float mean, float amplitude) {
+    for (size_t x = 0; x < a.resolution.width; x++) {
+        a.buffer[a.stride * y + x] = mean + amplitude * (randf() - 0.5f);
     }
 }
 
@@ -276,8 +274,7 @@ void array2f_rand(array2f a, float amplitude) {
 int main() {
     const size_t N = 100;
     const size_t size=(N+2)*(N+2);
-    //float u[size], v[size], u_prev[size], v_prev[size];
-    //float dens[size], dens_prev[size];
+
     array2f u = create_array2f(N + 2, N + 2); array2f_fill(u, 0.f);
     array2f v = create_array2f(N + 2, N + 2); array2f_fill(v, 0.f);
     array2f u_prev = create_array2f(N + 2, N + 2); array2f_fill(u_prev, 0.f);
@@ -292,12 +289,12 @@ int main() {
     const image im = load_rgba("hearth.bgra", 100, 100);
     
     dens_from_alpha(&im, dens.buffer, N);
-    //flow(u_prev, v_prev, 5 / dt, 5.0f / dt, N);
     
     //image_scale
     const image dens_im = create_image(N, N);
     for (size_t frame = 0; frame < 1000; frame++) {
-        flow(u.buffer, v.buffer, 0, -15.f, 15, 15, N);
+        flow(u, N - 10, 0, 15);
+        flow(v, N - 10, -15.0f, 0);
 
         clear(&screen, 0xff222222);
         //get_from_UI ( dens_prev, u_prev, v_prev );
