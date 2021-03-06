@@ -294,8 +294,8 @@ int main() {
     //image_scale
     const image dens_im = create_image(N, N);
     for (size_t frame = 0; frame < 1000; frame++) {
-        flow(u, N - 10, 0, 15);
-        flow(v, N - 10, -15.0f, 0);
+        flow(u, N - 10, 0, 45);
+        flow(v, N - 10, -5.0f, 5);
 
         clear(&screen, 0xff222222);
         //get_from_UI ( dens_prev, u_prev, v_prev );
