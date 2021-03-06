@@ -1,6 +1,21 @@
 #include <stdint.h>
+#include <stdlib.h>
 
+#include "color.h"
 #include "image.h"
+
+image create_image(size_t width, size_t height) {
+    image image;
+    image.buffer = malloc(sizeof(color_t) * width * height);
+    image.resolution.width = width;
+    image.resolution.height = height;
+    image.stride = width;
+    return image;
+}
+
+void destroy_image(const image *image) {
+    free(image->buffer);
+}
 
 size_t image_pixel_count(const image *image) {
     return image->resolution.width * image->resolution.height;
@@ -20,19 +35,6 @@ void clear(const image *image, color_t color) {
     for (i = 0; i < image_pixel_count(image); i++) {
         image->buffer[i] = color;
     }
-}
-
-color_t rgb(uint32_t r, uint32_t g, uint32_t b) {
-    const uint32_t alpha = 0xff;
-    return alpha << 24 | (r & 0xff) << 16 | (g & 0xff) << 8 | (b & 0xff);
-}
-
-color_t rgbf(float r, float g, float b) {
-    return rgb((uint32_t)(r * 255), (uint32_t)(g * 255), (uint32_t)(b * 255));
-}
-
-size_t get_alpha(color_t color) {
-    return (color >> 24) & 0xff; 
 }
 
 // array 2f

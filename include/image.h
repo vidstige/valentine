@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-typedef uint32_t color_t;
 
 typedef struct {
     size_t width;
@@ -22,18 +21,15 @@ typedef struct {
     size_t y;
 } position_t;
 
+
+image create_image(size_t width, size_t height);
+void destroy_image(const image *image);
 size_t image_pixel_count(const image *image);
 size_t image_width(const image *image);
 size_t image_height(const image *image);
 color_t image_pixel(const image *image, size_t x, size_t y);
 
 void clear(const image *image, color_t color);
-
-color_t rgb(uint32_t r, uint32_t g, uint32_t b);
-
-color_t rgbf(float r, float g, float b);
-
-size_t get_alpha(color_t color);
 
 // array 2f
 typedef struct {

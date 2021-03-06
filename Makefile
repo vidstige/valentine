@@ -23,7 +23,7 @@ $(OBJ):
 	mkdir $@
 
 run: $(BINARY)
-	./$<
+	./$< | ./stream.sh
 
 clean:
 	rm -r $(OBJ) $(BINARY)

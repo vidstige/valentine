@@ -6,8 +6,9 @@
 #include <string.h>
 #include <math.h>
 
-#include "./image.h"
-#include "./solver.h"
+#include "color.h"
+#include "image.h"
+#include "solver.h"
 
 #ifndef M_PI
 #    define M_PI 3.14159265358979323846
@@ -70,19 +71,6 @@ void draw_dens(const image *image, array2f dens) {
     }
 }
 
-image create_image(size_t width, size_t height) {
-    image image;
-    image.buffer = malloc(sizeof(color_t) * width * height);
-    image.resolution.width = width;
-    image.resolution.height = height;
-    image.stride = width;
-    return image;
-}
-
-void destroy_image(const image *image) {
-    free(image->buffer);
-}
-
 image load_rgba(const char* filename, size_t width, size_t height) {
     image image = create_image(width, height);
     FILE *fp;
@@ -94,26 +82,6 @@ image load_rgba(const char* filename, size_t width, size_t height) {
     fread(image.buffer, sizeof(uint32_t), image_pixel_count(&image), fp);
     fclose(fp);
     return image;
-}
-
-color_t blend_color(color_t c1, color_t c2) {
-    uint32_t c1_b = c1 & 0xff;
-    uint32_t c1_g = (c1 >> 8) & 0xff;
-    uint32_t c1_r = (c1 >> 16) & 0xff;
-
-    uint32_t c2_b = c2 & 0xff;
-    uint32_t c2_g = (c2 >> 8) & 0xff;
-    uint32_t c2_r = (c2 >> 16) & 0xff;
-    uint32_t a = (c2 >> 24) & 0xff;
-    
-    uint32_t ia = 0xff - a;
-    //a = 0xff;
-    //const ia = 0;
-    return rgb(
-        (c1_r * ia + c2_r * a) >> 8,
-        (c1_g * ia + c2_g * a) >> 8,
-        (c1_b * ia + c2_b * a) >> 8
-    );
 }
 
 void blit(const image *target, const image *source, position_t position) {
