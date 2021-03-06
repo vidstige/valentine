@@ -33,7 +33,6 @@ void lin_solve ( int N, int b, float * x, float * x0, float a, float c )
 		FOR_EACH_CELL
 			x[IX(i,j)] = (x0[IX(i,j)] + a*(x[IX(i-1,j)]+x[IX(i+1,j)]+x[IX(i,j-1)]+x[IX(i,j+1)]))/c;
 		END_FOR
-		set_bnd ( N, b, x );
 	}
 }
 
@@ -41,6 +40,7 @@ void diffuse ( int N, int b, float * x, float * x0, float diff, float dt )
 {
 	float a=dt*diff*N*N;
 	lin_solve ( N, b, x, x0, a, 1+4*a );
+	set_bnd ( N, b, x );
 }
 
 void advect ( int N, int b, float * d, float * d0, float * u, float * v, float dt )
@@ -75,6 +75,7 @@ void project ( int N, float * u, float * v, float * p, float * div )
 	set_bnd ( N, 0, div ); set_bnd ( N, 0, p );
 
 	lin_solve ( N, 0, p, div, 1, 4 );
+	set_bnd ( N, 0, p );
 
 	FOR_EACH_CELL
 		u[IX(i,j)] -= 0.5f*N*(p[IX(i+1,j)]-p[IX(i-1,j)]);
