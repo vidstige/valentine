@@ -19,17 +19,17 @@ void set_bnd(int b, const array2f *x)
 	const size_t h = x->resolution.height;
 
 	for (size_t i = 1; i < w - 1; i++) {
-		ARRAY2F_AT(x, i, 0) = b==2 ? -ARRAY2F_AT(x, i,   1) : ARRAY2F_AT(x, i,   1);
-		ARRAY2F_AT(x, i, h-1) = b==2 ? -ARRAY2F_AT(x, i, h-2) : ARRAY2F_AT(x, i, h-2);
+		ARRAY2F_AT(x, i, 0) = b==2 ? -array2f_get(x, i,   1) : array2f_get(x, i,   1);
+		ARRAY2F_AT(x, i, h - 1) = b==2 ? -array2f_get(x, i, h - 2) : array2f_get(x, i, h - 2);
 	}
 	for (size_t j = 1; j < h - 1; j++) {
-		ARRAY2F_AT(x, 0  , j) = b==1 ? -ARRAY2F_AT(x, 1, j) : ARRAY2F_AT(x, 1, j);
-		ARRAY2F_AT(x, w-1, j) = b==1 ? -ARRAY2F_AT(x, w-2, j) : ARRAY2F_AT(x, w-2, j);
+		ARRAY2F_AT(x, 0, j) = b==1 ? -array2f_get(x, 1, j) : array2f_get(x, 1, j);
+		ARRAY2F_AT(x, w - 1, j) = b==1 ? -array2f_get(x, w - 2, j) : array2f_get(x, w - 2, j);
 	}
-	ARRAY2F_AT(x, 0  ,0  ) = 0.5f*(ARRAY2F_AT(x, 1,0  )+ARRAY2F_AT(x, 0  ,1));
-	ARRAY2F_AT(x, 0  ,h-1) = 0.5f*(ARRAY2F_AT(x, 1,h-1)+ARRAY2F_AT(x, 0  ,h-2));
-	ARRAY2F_AT(x, w-1,0  ) = 0.5f*(ARRAY2F_AT(x, w-2,0  )+ARRAY2F_AT(x, w-1,1));
-	ARRAY2F_AT(x, w-1,h-1) = 0.5f*(ARRAY2F_AT(x, w-2,h-1)+ARRAY2F_AT(x, w-1,h-2));
+	ARRAY2F_AT(x, 0, 0  ) = 0.5f*(array2f_get(x, 1, 0  ) + array2f_get(x, 0, 1));
+	ARRAY2F_AT(x, 0, h - 1) = 0.5f*(array2f_get(x, 1, h - 1) + array2f_get(x, 0, h - 2));
+	ARRAY2F_AT(x, w - 1, 0) = 0.5f*(array2f_get(x, w - 2, 0  ) + array2f_get(x, w - 1, 1));
+	ARRAY2F_AT(x, w - 1, h - 1) = 0.5f*(array2f_get(x, w - 2, h - 1) + array2f_get(x, w - 1, h - 2));
 }
 
 void lin_solve(int b, const array2f *x, const array2f *x0, float a, float c)
@@ -40,11 +40,11 @@ void lin_solve(int b, const array2f *x, const array2f *x0, float a, float c)
 	for (size_t k = 0; k < 20; k++) {
 		for (size_t j = 1; j < h - 1; j++) {
 			for (size_t i = 1; i < w - 1; i++) {
-				ARRAY2F_AT(x, i, j) = (ARRAY2F_AT(x0, i,j) + a * (
-					ARRAY2F_AT(x,i-1,j) +
-					ARRAY2F_AT(x,i+1,j) +
-					ARRAY2F_AT(x,i,j-1) +
-					ARRAY2F_AT(x,i,j+1))) / c;
+				ARRAY2F_AT(x, i, j) = (array2f_get(x0, i,j) + a * (
+					array2f_get(x, i - 1, j) +
+					array2f_get(x, i + 1, j) +
+					array2f_get(x, i, j - 1) +
+					array2f_get(x, i, j + 1))) / c;
 			}
 		}
 	}
@@ -115,8 +115,8 @@ void project(const array2f *u, const array2f *v, const array2f *p, const array2f
 void density_step(array2f *x, array2f *x0, array2f *u, array2f *v, float diff, float dt)
 {
 	add_source(x, x0, dt);
-	SWAP ( x0, x ); diffuse(0, x, x0, diff, dt );
-	SWAP ( x0, x ); advect (0, x, x0, u, v, dt );
+	SWAP(x0, x); diffuse(0, x, x0, diff, dt);
+	SWAP(x0, x); advect (0, x, x0, u, v, dt);
 }
 
 void velocity_step(array2f *u, array2f *v, array2f *u0, array2f *v0, float visc, float dt)
