@@ -66,19 +66,28 @@ void advect( int N, int b, const array2f *d, const array2f *d0, const array2f *u
 	const size_t w = d0->resolution.width;
 	const size_t h = d0->resolution.height;
 
-	dt0 = dt*N;
+	dt0 = dt * N;
 	for (size_t j = 1; j < h - 1; j++) {
 		for (size_t i = 1; i < w - 1; i++) {
-			x = i-dt0*u->buffer[IX(i,j)]; y = j-dt0*v->buffer[IX(i,j)];
+			x = i - dt0 * u->buffer[IX(i,j)];
 			if (x<0.5f) x=0.5f;
 			if (x>N+0.5f) x=N+0.5f;
-			i0=(int)x; i1=i0+1;
+
+			y = j - dt0 * v->buffer[IX(i,j)];
 			if (y<0.5f) y=0.5f;
 			if (y>N+0.5f) y=N+0.5f;
-			j0=(int)y; j1=j0+1;
-			s1 = x-i0; s0 = 1-s1; t1 = y-j0; t0 = 1-t1;
-			d->buffer[IX(i,j)] = s0*(t0*d0->buffer[IX(i0,j0)]+t1*d0->buffer[IX(i0,j1)])+
-								s1*(t0*d0->buffer[IX(i1,j0)]+t1*d0->buffer[IX(i1,j1)]);
+			
+			i0=(int)x;
+			i1=i0+1;
+			j0=(int)y;
+			j1=j0+1;
+
+			s1 = x - i0;
+			s0 = 1 - s1;
+			t1 = y - j0;
+			t0 = 1 - t1;
+			d->buffer[IX(i,j)] = s0 * (t0 * d0->buffer[IX(i0,j0)] + t1 * d0->buffer[IX(i0,j1)]) +
+								 s1 * (t0 * d0->buffer[IX(i1,j0)] + t1 * d0->buffer[IX(i1,j1)]);
 		}
 	}
 	set_bnd(b, d);
