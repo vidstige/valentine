@@ -5,10 +5,15 @@
 #define FOR_EACH_CELL for ( i=1 ; i<=N ; i++ ) { for ( j=1 ; j<=N ; j++ ) {
 #define END_FOR }}
 
-void add_source ( int N, float * x, float * s, float dt )
+void add_source(const array2f *array, const array2f *source, float dt )
 {
-	int i, size=(N+2)*(N+2);
-	for ( i=0 ; i<size ; i++ ) x[i] += dt*s[i];
+	for (size_t y = 0; y < array->resolution.height; y++) {
+		for (size_t x = 0; x < array->resolution.width; x++) {
+			array2f_set(
+				array, x, y,
+				array2f_get(array, x, y) + array2f_get(source, x, y) * dt);
+		}
+	}
 }
 
 void set_bnd ( int N, int b, float * x )
@@ -88,14 +93,14 @@ void project ( int N, float * u, float * v, float * p, float * div )
 
 void density_step(size_t N, array2f *x, array2f *x0, array2f *u, array2f *v, float diff, float dt)
 {
-	add_source ( N, x->buffer, x0->buffer, dt );
+	add_source(x, x0, dt);
 	SWAP ( x0, x ); diffuse ( N, 0, x->buffer, x0->buffer, diff, dt );
 	SWAP ( x0, x ); advect ( N, 0, x->buffer, x0->buffer, u->buffer, v->buffer, dt );
 }
 
 void velocity_step(size_t N, array2f *u, array2f *v, array2f *u0, array2f *v0, float visc, float dt)
 {
-	add_source ( N, u->buffer, u0->buffer, dt ); add_source ( N, v->buffer, v0->buffer, dt );
+	add_source(u, u0, dt); add_source(v, v0, dt);
 	SWAP ( u0, u ); diffuse ( N, 1, u->buffer, u0->buffer, visc, dt );
 	SWAP ( v0, v ); diffuse ( N, 2, v->buffer, v0->buffer, visc, dt );
 	project ( N, u->buffer, v->buffer, u0->buffer, v0->buffer );
