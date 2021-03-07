@@ -33,7 +33,7 @@ void set_bnd(int b, const array2f *x)
 	ARRAY2F_AT(x, w-1,h-1) = 0.5f*(ARRAY2F_AT(x, w-2,h-1)+ARRAY2F_AT(x, w-1,h-2));
 }
 
-void lin_solve ( int N, int b, const array2f *x, const array2f *x0, float a, float c )
+void lin_solve(int b, const array2f *x, const array2f *x0, float a, float c)
 {
 	const size_t w = x->resolution.width;
 	const size_t h = x->resolution.height;
@@ -41,7 +41,11 @@ void lin_solve ( int N, int b, const array2f *x, const array2f *x0, float a, flo
 	for (size_t k = 0; k < 20; k++) {
 		for (size_t j = 1; j < h - 1; j++) {
 			for (size_t i = 1; i < w - 1; i++) {
-				x->buffer[IX(i,j)] = (x0->buffer[IX(i,j)] + a*(x->buffer[IX(i-1,j)]+x->buffer[IX(i+1,j)]+x->buffer[IX(i,j-1)]+x->buffer[IX(i,j+1)]))/c;
+				ARRAY2F_AT(x, i, j) = (ARRAY2F_AT(x0, i,j) + a * (
+					ARRAY2F_AT(x,i-1,j) +
+					ARRAY2F_AT(x,i+1,j) +
+					ARRAY2F_AT(x,i,j-1) +
+					ARRAY2F_AT(x,i,j+1))) / c;
 			}
 		}
 	}
@@ -50,7 +54,7 @@ void lin_solve ( int N, int b, const array2f *x, const array2f *x0, float a, flo
 void diffuse(int N, int b, const array2f *x, const array2f *x0, float diff, float dt )
 {
 	float a = dt * diff * N * N;
-	lin_solve( N, b, x, x0, a, 1 + 4 * a);
+	lin_solve(b, x, x0, a, 1 + 4 * a);
 	set_bnd(b, x);
 }
 
@@ -93,7 +97,7 @@ void project(int N, const array2f *u, const array2f *v, const array2f *p, const 
 	}
 	set_bnd(0, div); set_bnd(0, p);
 
-	lin_solve(N, 0, p, div, 1, 4);
+	lin_solve(0, p, div, 1, 4);
 	set_bnd(0, p);
 
 	for (size_t j = 1; j < h - 1; j++) {
