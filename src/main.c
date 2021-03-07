@@ -6,6 +6,7 @@
 #include <string.h>
 #include <math.h>
 
+#include "array2f.h"
 #include "color.h"
 #include "image.h"
 #include "solver.h"

@@ -7,15 +7,18 @@ array2f create_array2f(size_t width, size_t height) {
     array.resolution.width = width;
     array.resolution.height = height;
     array.stride = width;
+    array.owns_buffer = true;
     return array;
 }
 
 void destroy_array2f(const array2f *array) {
-    free(array->buffer);
+    if (array->owns_buffer) free(array->buffer);
 }
+
 float array2f_get(const array2f *array, size_t x, size_t y) {
     return array->buffer[y * array->stride + x];
 }
+
 void array2f_set(const array2f *array, size_t x, size_t y, float value) {
     array->buffer[y * array->stride + x] = value;
 }
@@ -27,5 +30,6 @@ array2f array2f_pad(const array2f *array, size_t pad_x, size_t pad_y) {
     a.buffer = array->buffer + pad_y * a.stride + pad_x;
     a.resolution.width = array->resolution.width - 2 * pad_x;
     a.resolution.height = array->resolution.height - 2* pad_y;
+    a.owns_buffer = false;
     return a;
 }

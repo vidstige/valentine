@@ -1,6 +1,7 @@
 #ifndef _ARRAY2F_H
 #define _ARRAY2F_H
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include "resolution.h"
 
@@ -9,6 +10,7 @@ typedef struct {
     float *buffer;
     resolution_t resolution;
     size_t stride;
+    bool owns_buffer;  // wether destroy should free the buffer
 } array2f;
 
 
