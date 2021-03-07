@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "src/*.c": "c",
+        "include/*.h": "c",
+    }
+}
