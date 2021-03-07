@@ -2,8 +2,6 @@
 
 #define IX(i,j) ((i)+(N+2)*(j))
 #define SWAP(x0,x) {array2f * tmp=x0;x0=x;x=tmp;}
-#define FOR_EACH_CELL for ( i=1 ; i<=N ; i++ ) { for ( j=1 ; j<=N ; j++ ) {
-#define END_FOR }}
 
 void add_source(const array2f *array, const array2f *source, float dt )
 {
@@ -34,12 +32,15 @@ void set_bnd(int N, int b, float * x)
 
 void lin_solve ( int N, int b, const array2f *x, const array2f *x0, float a, float c )
 {
-	int i, j, k;
+	const size_t w = x->resolution.width;
+	const size_t h = x->resolution.height;
 
 	for (size_t k = 0; k < 20; k++) {
-		FOR_EACH_CELL
-			x->buffer[IX(i,j)] = (x0->buffer[IX(i,j)] + a*(x->buffer[IX(i-1,j)]+x->buffer[IX(i+1,j)]+x->buffer[IX(i,j-1)]+x->buffer[IX(i,j+1)]))/c;
-		END_FOR
+		for (size_t j = 1; j < h - 1; j++) {
+			for (size_t i = 1; i < w - 1; i++) {
+				x->buffer[IX(i,j)] = (x0->buffer[IX(i,j)] + a*(x->buffer[IX(i-1,j)]+x->buffer[IX(i+1,j)]+x->buffer[IX(i,j-1)]+x->buffer[IX(i,j+1)]))/c;
+			}
+		}
 	}
 }
 
@@ -52,42 +53,52 @@ void diffuse(int N, int b, const array2f *x, const array2f *x0, float diff, floa
 
 void advect( int N, int b, const array2f *d, const array2f *d0, const array2f *u, const array2f *v, float dt)
 {
-	int i, j, i0, j0, i1, j1;
+	int i0, j0, i1, j1;
 	float x, y, s0, t0, s1, t1, dt0;
 
+	const size_t w = d0->resolution.width;
+	const size_t h = d0->resolution.height;
+
 	dt0 = dt*N;
-	FOR_EACH_CELL
-		x = i-dt0*u->buffer[IX(i,j)]; y = j-dt0*v->buffer[IX(i,j)];
-		if (x<0.5f) x=0.5f;
-		if (x>N+0.5f) x=N+0.5f;
-		i0=(int)x; i1=i0+1;
-		if (y<0.5f) y=0.5f;
-		if (y>N+0.5f) y=N+0.5f;
-		j0=(int)y; j1=j0+1;
-		s1 = x-i0; s0 = 1-s1; t1 = y-j0; t0 = 1-t1;
-		d->buffer[IX(i,j)] = s0*(t0*d0->buffer[IX(i0,j0)]+t1*d0->buffer[IX(i0,j1)])+
-							 s1*(t0*d0->buffer[IX(i1,j0)]+t1*d0->buffer[IX(i1,j1)]);
-	END_FOR
+	for (size_t j = 1; j < h - 1; j++) {
+		for (size_t i = 1; i < w - 1; i++) {
+			x = i-dt0*u->buffer[IX(i,j)]; y = j-dt0*v->buffer[IX(i,j)];
+			if (x<0.5f) x=0.5f;
+			if (x>N+0.5f) x=N+0.5f;
+			i0=(int)x; i1=i0+1;
+			if (y<0.5f) y=0.5f;
+			if (y>N+0.5f) y=N+0.5f;
+			j0=(int)y; j1=j0+1;
+			s1 = x-i0; s0 = 1-s1; t1 = y-j0; t0 = 1-t1;
+			d->buffer[IX(i,j)] = s0*(t0*d0->buffer[IX(i0,j0)]+t1*d0->buffer[IX(i0,j1)])+
+								s1*(t0*d0->buffer[IX(i1,j0)]+t1*d0->buffer[IX(i1,j1)]);
+		}
+	}
 	set_bnd ( N, b, d->buffer );
 }
 
 void project(int N, const array2f *u, const array2f *v, const array2f *p, const array2f *div)
 {
-	int i, j;
+	const size_t w = u->resolution.width;
+	const size_t h = u->resolution.height;
 
-	FOR_EACH_CELL
-		div->buffer[IX(i,j)] = -0.5f*(u->buffer[IX(i+1,j)]-u->buffer[IX(i-1,j)]+v->buffer[IX(i,j+1)]-v->buffer[IX(i,j-1)])/N;
-		p->buffer[IX(i,j)] = 0;
-	END_FOR	
+	for (size_t j = 1; j < h - 1; j++) {
+		for (size_t i = 1; i < w - 1; i++) {
+			div->buffer[IX(i,j)] = -0.5f*(u->buffer[IX(i+1,j)]-u->buffer[IX(i-1,j)]+v->buffer[IX(i,j+1)]-v->buffer[IX(i,j-1)])/N;
+			p->buffer[IX(i,j)] = 0;
+		}
+	}
 	set_bnd ( N, 0, div->buffer ); set_bnd ( N, 0, p->buffer );
 
 	lin_solve ( N, 0, p, div, 1, 4 );
 	set_bnd ( N, 0, p->buffer );
 
-	FOR_EACH_CELL
-		u->buffer[IX(i,j)] -= 0.5f*N*(p->buffer[IX(i+1,j)]-p->buffer[IX(i-1,j)]);
-		v->buffer[IX(i,j)] -= 0.5f*N*(p->buffer[IX(i,j+1)]-p->buffer[IX(i,j-1)]);
-	END_FOR
+	for (size_t j = 1; j < h - 1; j++) {
+		for (size_t i = 1; i < w - 1; i++) {
+			u->buffer[IX(i,j)] -= 0.5f*N*(p->buffer[IX(i+1,j)]-p->buffer[IX(i-1,j)]);
+			v->buffer[IX(i,j)] -= 0.5f*N*(p->buffer[IX(i,j+1)]-p->buffer[IX(i,j-1)]);
+		}
+	}
 	set_bnd ( N, 1, u->buffer ); set_bnd ( N, 2, v->buffer );
 }
 
