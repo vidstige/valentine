@@ -32,13 +32,13 @@ void set_bnd(int N, int b, float * x)
 	x[IX(N+1,N+1)] = 0.5f*(x[IX(N,N+1)]+x[IX(N+1,N)]);
 }
 
-void lin_solve ( int N, int b, float * x, float * x0, float a, float c )
+void lin_solve ( int N, int b, const array2f *x, const array2f *x0, float a, float c )
 {
 	int i, j, k;
 
 	for (size_t k = 0; k < 20; k++) {
 		FOR_EACH_CELL
-			x[IX(i,j)] = (x0[IX(i,j)] + a*(x[IX(i-1,j)]+x[IX(i+1,j)]+x[IX(i,j-1)]+x[IX(i,j+1)]))/c;
+			x->buffer[IX(i,j)] = (x0->buffer[IX(i,j)] + a*(x->buffer[IX(i-1,j)]+x->buffer[IX(i+1,j)]+x->buffer[IX(i,j-1)]+x->buffer[IX(i,j+1)]))/c;
 		END_FOR
 	}
 }
@@ -46,7 +46,7 @@ void lin_solve ( int N, int b, float * x, float * x0, float a, float c )
 void diffuse(int N, int b, const array2f *x, const array2f *x0, float diff, float dt )
 {
 	float a = dt * diff * N * N;
-	lin_solve( N, b, x->buffer, x0->buffer, a, 1 + 4 * a);
+	lin_solve( N, b, x, x0, a, 1 + 4 * a);
 	set_bnd(N, b, x->buffer);
 }
 
@@ -81,7 +81,7 @@ void project(int N, const array2f *u, const array2f *v, const array2f *p, const 
 	END_FOR	
 	set_bnd ( N, 0, div->buffer ); set_bnd ( N, 0, p->buffer );
 
-	lin_solve ( N, 0, p->buffer, div->buffer, 1, 4 );
+	lin_solve ( N, 0, p, div, 1, 4 );
 	set_bnd ( N, 0, p->buffer );
 
 	FOR_EACH_CELL
