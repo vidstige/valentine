@@ -60,31 +60,24 @@ void diffuse(int b, const array2f *x, const array2f *x0, float diff, float dt )
 
 void advect( int N, int b, const array2f *d, const array2f *d0, const array2f *u, const array2f *v, float dt)
 {
-	int i0, j0, i1, j1;
-	float x, y, s0, t0, s1, t1;
-
 	const size_t w = d0->resolution.width;
 	const size_t h = d0->resolution.height;
 
 	for (size_t j = 1; j < h - 1; j++) {
 		for (size_t i = 1; i < w - 1; i++) {
-			x = i - (dt * (w - 2)) * array2f_get(u, i, j);
+			float x = i - (dt * (w - 2)) * array2f_get(u, i, j);
 			if (x < 0.5f) x = 0.5f;
 			if (x > N+0.5f) x = N + 0.5f;
 
-			y = j - (dt * (h - 2)) * array2f_get(v, i, j);
+			float y = j - (dt * (h - 2)) * array2f_get(v, i, j);
 			if (y < 0.5f) y = 0.5f;
 			if (y > N+0.5f) y = N + 0.5f;
 			
-			i0=(int)x;
-			i1=i0+1;
-			j0=(int)y;
-			j1=j0+1;
+			size_t i0=(int)x, i1 = i0 + 1;
+			size_t j0=(int)y, j1 = j0 + 1;
 
-			s1 = x - i0;
-			s0 = 1 - s1;
-			t1 = y - j0;
-			t0 = 1 - t1;
+			float s1 = x - i0, s0 = 1 - s1;
+			float t1 = y - j0, t0 = 1 - t1;
 			d->buffer[IX(i,j)] = s0 * (t0 * d0->buffer[IX(i0,j0)] + t1 * d0->buffer[IX(i0,j1)]) +
 								 s1 * (t0 * d0->buffer[IX(i1,j0)] + t1 * d0->buffer[IX(i1,j1)]);
 		}
