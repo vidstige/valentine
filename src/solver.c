@@ -1,6 +1,5 @@
 #include "array2f.h"
 
-#define IX(i,j) ((i)+(N+2)*(j))
 #define SWAP(x0,x) {array2f * tmp=x0;x0=x;x=tmp;}
 
 void add_source(const array2f *array, const array2f *source, float dt )
@@ -120,7 +119,7 @@ void density_step(array2f *x, array2f *x0, array2f *u, array2f *v, float diff, f
 	SWAP ( x0, x ); advect (0, x, x0, u, v, dt );
 }
 
-void velocity_step(size_t N, array2f *u, array2f *v, array2f *u0, array2f *v0, float visc, float dt)
+void velocity_step(array2f *u, array2f *v, array2f *u0, array2f *v0, float visc, float dt)
 {
 	add_source(u, u0, dt); add_source(v, v0, dt);
 	SWAP(u0, u); diffuse(1, u, u0, visc, dt);

@@ -158,7 +158,6 @@ int main() {
     srand(1337);
 
     const size_t N = 100;
-//    const size_t size=(N+2)*(N+2);
 
     array2f u = create_array2f(N + 2, N + 2); array2f_fill(u, 0.f);
     array2f v = create_array2f(N + 2, N + 2); array2f_fill(v, 0.f);
@@ -184,7 +183,7 @@ int main() {
 
         clear(&screen, 0xff222222);
         //get_from_UI ( dens_prev, u_prev, v_prev );
-        velocity_step(N, &u, &v, &u_prev, &v_prev, visc, dt);
+        velocity_step(&u, &v, &u_prev, &v_prev, visc, dt);
         density_step(&dens, &dens_prev, &u, &v, diff, dt);
         draw_dens(&dens_im, array2f_pad(&dens, 1, 1));
         image_scale(&screen, &dens_im);
