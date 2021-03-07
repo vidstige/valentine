@@ -85,15 +85,18 @@ void advect(int b, const array2f *d, const array2f *d0, const array2f *u, const 
 	set_bnd(b, d);
 }
 
-void project(int N, const array2f *u, const array2f *v, const array2f *p, const array2f *div)
+void project(const array2f *u, const array2f *v, const array2f *p, const array2f *div)
 {
 	const size_t w = u->resolution.width;
 	const size_t h = u->resolution.height;
 
+	const size_t N = (w + h - 4) / 2; // TODO: Should this be sqrt instead?
 	for (size_t j = 1; j < h - 1; j++) {
 		for (size_t i = 1; i < w - 1; i++) {
-			div->buffer[IX(i,j)] = -0.5f*(u->buffer[IX(i+1,j)]-u->buffer[IX(i-1,j)]+v->buffer[IX(i,j+1)]-v->buffer[IX(i,j-1)])/N;
-			p->buffer[IX(i,j)] = 0;
+			ARRAY2F_AT(div, i, j) = -0.5f * (
+				array2f_get(u, i + 1, j) - array2f_get(u, i - 1, j) +
+				array2f_get(v, i, j + 1) - array2f_get(v, i, j - 1)) / N;
+			ARRAY2F_AT(p, i, j) = 0;
 		}
 	}
 	set_bnd(0, div); set_bnd(0, p);
@@ -103,8 +106,8 @@ void project(int N, const array2f *u, const array2f *v, const array2f *p, const 
 
 	for (size_t j = 1; j < h - 1; j++) {
 		for (size_t i = 1; i < w - 1; i++) {
-			u->buffer[IX(i,j)] -= 0.5f*N*(p->buffer[IX(i+1,j)]-p->buffer[IX(i-1,j)]);
-			v->buffer[IX(i,j)] -= 0.5f*N*(p->buffer[IX(i,j+1)]-p->buffer[IX(i,j-1)]);
+			ARRAY2F_AT(u, i, j) -= 0.5f * (w-2) * (array2f_get(p, i + 1, j) - array2f_get(p, i - 1, j));
+			ARRAY2F_AT(v, i, j) -= 0.5f * (h-2) * (array2f_get(p, i, j + 1) - array2f_get(p, i, j - 1));
 		}
 	}
 	set_bnd(1, u); set_bnd(2, v);
@@ -122,9 +125,9 @@ void velocity_step(size_t N, array2f *u, array2f *v, array2f *u0, array2f *v0, f
 	add_source(u, u0, dt); add_source(v, v0, dt);
 	SWAP(u0, u); diffuse(1, u, u0, visc, dt);
 	SWAP(v0, v); diffuse(2, v, v0, visc, dt);
-	project(N, u, v, u0, v0);
+	project(u, v, u0, v0);
 	SWAP(u0, u); SWAP(v0, v);
 	advect(1, u, u0, u0, v0, dt);
 	advect(2, v, v0, u0, v0, dt);
-	project(N, u, v, u0, v0);
+	project(u, v, u0, v0);
 }
