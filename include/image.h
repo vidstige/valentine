@@ -4,11 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-
-typedef struct {
-    size_t width;
-    size_t height;
-} resolution_t;
+#include "resolution.h"
 
 typedef struct {
     color_t* buffer;
