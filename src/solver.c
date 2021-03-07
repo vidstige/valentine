@@ -110,7 +110,7 @@ void project(int N, const array2f *u, const array2f *v, const array2f *p, const 
 	set_bnd(1, u); set_bnd(2, v);
 }
 
-void density_step(size_t N, array2f *x, array2f *x0, array2f *u, array2f *v, float diff, float dt)
+void density_step(array2f *x, array2f *x0, array2f *u, array2f *v, float diff, float dt)
 {
 	add_source(x, x0, dt);
 	SWAP ( x0, x ); diffuse(0, x, x0, diff, dt );

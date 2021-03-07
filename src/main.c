@@ -185,7 +185,7 @@ int main() {
         clear(&screen, 0xff222222);
         //get_from_UI ( dens_prev, u_prev, v_prev );
         velocity_step(N, &u, &v, &u_prev, &v_prev, visc, dt);
-        density_step(N, &dens, &dens_prev, &u, &v, diff, dt);
+        density_step(&dens, &dens_prev, &u, &v, diff, dt);
         draw_dens(&dens_im, array2f_pad(&dens, 1, 1));
         image_scale(&screen, &dens_im);
         //blit(&screen, &im, center(screen.resolution, im.resolution));
