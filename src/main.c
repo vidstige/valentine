@@ -154,6 +154,29 @@ void array2f_rand(array2f a, float amplitude) {
         c += (a.stride - a.resolution.width);
     }
 }
+
+void box_bounds(const bounds_t* bounds) {
+    const size_t w = bounds->bx.resolution.width;
+    const size_t h = bounds->bx.resolution.height;
+
+	for (size_t j = 1; j < h - 1; j++) {
+        array2f_set(&bounds->bx, 0, j, 1); // left edges points right
+        array2f_set(&bounds->by, 0, j, 0);
+
+        array2f_set(&bounds->bx, w - 1, j, -1); // right edge points left
+        array2f_set(&bounds->by, w - 1, j, 0);
+	}
+
+	for (size_t i = 1; i < w - 1; i++) {
+        array2f_set(&bounds->bx, i, 0, 0); // top edge points down
+        array2f_set(&bounds->by, i, 0, 1);
+
+        array2f_set(&bounds->bx, i, h - 1, 0); // bottom edge points up
+        array2f_set(&bounds->by, i, h - 1, -1);
+	}
+}
+
+
 int main() {
     srand(1337);
 
@@ -176,6 +199,11 @@ int main() {
     //dens_from_alpha(&im, dens.buffer, N);
 
     bounds_t bounds;
+    bounds.bx = create_array2f(N + 2, N + 2);
+    bounds.by = create_array2f(N + 2, N + 2);
+    array2f_fill(bounds.bx, 0.f);
+    array2f_fill(bounds.by, 0.f);
+    box_bounds(&bounds);
     
     //image_scale
     const image dens_im = create_image(N, N);
@@ -193,6 +221,10 @@ int main() {
         fwrite(screen.buffer, sizeof(uint32_t), image_pixel_count(&screen), stdout);
     }
     destroy_image(&dens_im);
+
+    destroy_array2f(&bounds.bx);
+    destroy_array2f(&bounds.by);
+
     destroy_image(&im);
     destroy_image(&screen);
 

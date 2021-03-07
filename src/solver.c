@@ -14,11 +14,40 @@ void add_source(const array2f *array, const array2f *source, float dt )
 	}
 }
 
+float dirty_mirror(int b, int dx, int dy) {
+	if (b == 1 && dx == 0) {
+		return -1.0f;
+	}
+	if (b == 2 && dy == 0) {
+		return -1.0f;
+	}
+	return 1.0f;
+}
+
 void set_bnd(int b, const array2f *x, const bounds_t *bounds)
 {
 	const size_t w = x->resolution.width;
 	const size_t h = x->resolution.height;
 
+	array2f tmp = create_array2f(x->resolution.width, x->resolution.height);
+	for (size_t j = 0; j < h; j++) {
+		for (size_t i = 0; i < w; i++) {
+			int dx = (int)array2f_get(&bounds->bx, i, j);
+			int dy = (int)array2f_get(&bounds->by, i, j);
+			float m = dirty_mirror(b, dx, dy);
+			array2f_set(&tmp, i, j,
+				m * array2f_get(x, i + dx, j + dy)
+			);
+		}
+	}
+	
+	for (size_t j = 0; j < h; j++) {
+		for (size_t i = 0; i < w; i++) {
+			array2f_set(x, i, j, array2f_get(&tmp, i, j));
+		}
+	}
+	destroy_array2f(&tmp);
+/*
 	for (size_t i = 1; i < w - 1; i++) {
 		ARRAY2F_AT(x, i, 0) = b==2 ? -array2f_get(x, i, 1) : array2f_get(x, i,   1);
 		ARRAY2F_AT(x, i, h - 1) = b==2 ? -array2f_get(x, i, h - 2) : array2f_get(x, i, h - 2);
@@ -27,6 +56,7 @@ void set_bnd(int b, const array2f *x, const bounds_t *bounds)
 		ARRAY2F_AT(x, 0, j) = b==1 ? -array2f_get(x, 1, j) : array2f_get(x, 1, j);
 		ARRAY2F_AT(x, w - 1, j) = b==1 ? -array2f_get(x, w - 2, j) : array2f_get(x, w - 2, j);
 	}
+*/
 	/*ARRAY2F_AT(x, 0, 0) = 0.5f*(array2f_get(x, 1, 0) + array2f_get(x, 0, 1));
 	ARRAY2F_AT(x, 0, h - 1) = 0.5f*(array2f_get(x, 1, h - 1) + array2f_get(x, 0, h - 2));
 	ARRAY2F_AT(x, w - 1, 0) = 0.5f*(array2f_get(x, w - 2, 0  ) + array2f_get(x, w - 1, 1));
