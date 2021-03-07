@@ -20,17 +20,17 @@ void set_bnd(int N, int b, const array2f *x)
 	const size_t h = x->resolution.height;
 
 	for (size_t i = 1; i < w - 1; i++) {
-		x->buffer[IX(i, 0  )] = b==2 ? -x->buffer[IX(i,   1)] : x->buffer[IX(i,   1)];
-		x->buffer[IX(i, h-1)] = b==2 ? -x->buffer[IX(i, h-2)] : x->buffer[IX(i, h-2)];
+		ARRAY2F_AT(x, i, 0) = b==2 ? -ARRAY2F_AT(x, i,   1) : ARRAY2F_AT(x, i,   1);
+		ARRAY2F_AT(x, i, h-1) = b==2 ? -ARRAY2F_AT(x, i, h-2) : ARRAY2F_AT(x, i, h-2);
 	}
 	for (size_t j = 1; j < h - 1; j++) {
-		x->buffer[IX(0  , j)] = b==1 ? -x->buffer[IX(1, j)] : x->buffer[IX(1, j)];
-		x->buffer[IX(w-1, j)] = b==1 ? -x->buffer[IX(w-2, j)] : x->buffer[IX(w-2, j)];
+		ARRAY2F_AT(x, 0  , j) = b==1 ? -ARRAY2F_AT(x, 1, j) : ARRAY2F_AT(x, 1, j);
+		ARRAY2F_AT(x, w-1, j) = b==1 ? -ARRAY2F_AT(x, w-2, j) : ARRAY2F_AT(x, w-2, j);
 	}
-	x->buffer[IX(0  ,0  )] = 0.5f*(x->buffer[IX(1,0  )]+x->buffer[IX(0  ,1)]);
-	x->buffer[IX(0  ,h-1)] = 0.5f*(x->buffer[IX(1,h-1)]+x->buffer[IX(0  ,h-2)]);
-	x->buffer[IX(w-1,0  )] = 0.5f*(x->buffer[IX(w-2,0  )]+x->buffer[IX(w-1,1)]);
-	x->buffer[IX(w-1,h-1)] = 0.5f*(x->buffer[IX(w-2,h-1)]+x->buffer[IX(w-1,h-2)]);
+	ARRAY2F_AT(x, 0  ,0  ) = 0.5f*(ARRAY2F_AT(x, 1,0  )+ARRAY2F_AT(x, 0  ,1));
+	ARRAY2F_AT(x, 0  ,h-1) = 0.5f*(ARRAY2F_AT(x, 1,h-1)+ARRAY2F_AT(x, 0  ,h-2));
+	ARRAY2F_AT(x, w-1,0  ) = 0.5f*(ARRAY2F_AT(x, w-2,0  )+ARRAY2F_AT(x, w-1,1));
+	ARRAY2F_AT(x, w-1,h-1) = 0.5f*(ARRAY2F_AT(x, w-2,h-1)+ARRAY2F_AT(x, w-1,h-2));
 }
 
 void lin_solve ( int N, int b, const array2f *x, const array2f *x0, float a, float c )

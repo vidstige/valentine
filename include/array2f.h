@@ -13,6 +13,7 @@ typedef struct {
     bool owns_buffer;  // wether destroy should free the buffer
 } array2f;
 
+#define ARRAY2F_AT(array, x, y) (array)->buffer[(x) + (array)->stride * (y)]
 
 array2f create_array2f(size_t width, size_t height);
 void destroy_array2f(const array2f *array);
