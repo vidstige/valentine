@@ -58,7 +58,7 @@ void diffuse(int b, const array2f *x, const array2f *x0, float diff, float dt )
 	set_bnd(b, x);
 }
 
-void advect( int N, int b, const array2f *d, const array2f *d0, const array2f *u, const array2f *v, float dt)
+void advect(int b, const array2f *d, const array2f *d0, const array2f *u, const array2f *v, float dt)
 {
 	const size_t w = d0->resolution.width;
 	const size_t h = d0->resolution.height;
@@ -67,11 +67,11 @@ void advect( int N, int b, const array2f *d, const array2f *d0, const array2f *u
 		for (size_t i = 1; i < w - 1; i++) {
 			float x = i - (dt * (w - 2)) * array2f_get(u, i, j);
 			if (x < 0.5f) x = 0.5f;
-			if (x > N+0.5f) x = N + 0.5f;
+			if (x > w-2 + 0.5f) x = w-2 + 0.5f;
 
 			float y = j - (dt * (h - 2)) * array2f_get(v, i, j);
 			if (y < 0.5f) y = 0.5f;
-			if (y > N+0.5f) y = N + 0.5f;
+			if (y > h-2+0.5f) y = h-2 + 0.5f;
 			
 			size_t i0=(int)x, i1 = i0 + 1;
 			size_t j0=(int)y, j1 = j0 + 1;
@@ -114,17 +114,17 @@ void density_step(size_t N, array2f *x, array2f *x0, array2f *u, array2f *v, flo
 {
 	add_source(x, x0, dt);
 	SWAP ( x0, x ); diffuse(0, x, x0, diff, dt );
-	SWAP ( x0, x ); advect ( N, 0, x, x0, u, v, dt );
+	SWAP ( x0, x ); advect (0, x, x0, u, v, dt );
 }
 
 void velocity_step(size_t N, array2f *u, array2f *v, array2f *u0, array2f *v0, float visc, float dt)
 {
 	add_source(u, u0, dt); add_source(v, v0, dt);
-	SWAP ( u0, u ); diffuse(1, u, u0, visc, dt);
-	SWAP ( v0, v ); diffuse(2, v, v0, visc, dt);
-	project ( N, u, v, u0, v0 );
-	SWAP ( u0, u ); SWAP ( v0, v );
-	advect ( N, 1, u, u0, u0, v0, dt);
-	advect ( N, 2, v, v0, u0, v0, dt);
-	project ( N, u, v, u0, v0 );
+	SWAP(u0, u); diffuse(1, u, u0, visc, dt);
+	SWAP(v0, v); diffuse(2, v, v0, visc, dt);
+	project(N, u, v, u0, v0);
+	SWAP(u0, u); SWAP(v0, v);
+	advect(1, u, u0, u0, v0, dt);
+	advect(2, v, v0, u0, v0, dt);
+	project(N, u, v, u0, v0);
 }
