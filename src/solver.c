@@ -50,14 +50,14 @@ void diffuse(int N, int b, const array2f *x, const array2f *x0, float diff, floa
 	set_bnd(N, b, x->buffer);
 }
 
-void advect ( int N, int b, float * d, float * d0, float * u, float * v, float dt )
+void advect( int N, int b, const array2f *d, const array2f *d0, const array2f *u, const array2f *v, float dt)
 {
 	int i, j, i0, j0, i1, j1;
 	float x, y, s0, t0, s1, t1, dt0;
 
 	dt0 = dt*N;
 	FOR_EACH_CELL
-		x = i-dt0*u[IX(i,j)]; y = j-dt0*v[IX(i,j)];
+		x = i-dt0*u->buffer[IX(i,j)]; y = j-dt0*v->buffer[IX(i,j)];
 		if (x<0.5f) x=0.5f;
 		if (x>N+0.5f) x=N+0.5f;
 		i0=(int)x; i1=i0+1;
@@ -65,10 +65,10 @@ void advect ( int N, int b, float * d, float * d0, float * u, float * v, float d
 		if (y>N+0.5f) y=N+0.5f;
 		j0=(int)y; j1=j0+1;
 		s1 = x-i0; s0 = 1-s1; t1 = y-j0; t0 = 1-t1;
-		d[IX(i,j)] = s0*(t0*d0[IX(i0,j0)]+t1*d0[IX(i0,j1)])+
-					 s1*(t0*d0[IX(i1,j0)]+t1*d0[IX(i1,j1)]);
+		d->buffer[IX(i,j)] = s0*(t0*d0->buffer[IX(i0,j0)]+t1*d0->buffer[IX(i0,j1)])+
+							 s1*(t0*d0->buffer[IX(i1,j0)]+t1*d0->buffer[IX(i1,j1)]);
 	END_FOR
-	set_bnd ( N, b, d );
+	set_bnd ( N, b, d->buffer );
 }
 
 void project(int N, const array2f *u, const array2f *v, const array2f *p, const array2f *div)
@@ -95,7 +95,7 @@ void density_step(size_t N, array2f *x, array2f *x0, array2f *u, array2f *v, flo
 {
 	add_source(x, x0, dt);
 	SWAP ( x0, x ); diffuse( N, 0, x, x0, diff, dt );
-	SWAP ( x0, x ); advect ( N, 0, x->buffer, x0->buffer, u->buffer, v->buffer, dt );
+	SWAP ( x0, x ); advect ( N, 0, x, x0, u, v, dt );
 }
 
 void velocity_step(size_t N, array2f *u, array2f *v, array2f *u0, array2f *v0, float visc, float dt)
@@ -105,7 +105,7 @@ void velocity_step(size_t N, array2f *u, array2f *v, array2f *u0, array2f *v0, f
 	SWAP ( v0, v ); diffuse(N, 2, v, v0, visc, dt);
 	project ( N, u, v, u0, v0 );
 	SWAP ( u0, u ); SWAP ( v0, v );
-	advect ( N, 1, u->buffer, u0->buffer, u0->buffer, v0->buffer, dt);
-	advect ( N, 2, v->buffer, v0->buffer, u0->buffer, v0->buffer, dt);
+	advect ( N, 1, u, u0, u0, v0, dt);
+	advect ( N, 2, v, v0, u0, v0, dt);
 	project ( N, u, v, u0, v0 );
 }
