@@ -25,5 +25,9 @@ $(OBJ):
 run: $(BINARY)
 	./$< | ./stream.sh
 
+test: $(BINARY) expected
+	./$< > actual
+	diff expected actual
+
 clean:
 	rm -r $(OBJ) $(BINARY)

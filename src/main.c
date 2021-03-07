@@ -155,6 +155,8 @@ void array2f_rand(array2f a, float amplitude) {
     }
 }
 int main() {
+    srand(1337);
+
     const size_t N = 100;
 //    const size_t size=(N+2)*(N+2);
 
@@ -176,7 +178,7 @@ int main() {
     
     //image_scale
     const image dens_im = create_image(N, N);
-    for (size_t frame = 0; frame < 1000; frame++) {
+    for (size_t frame = 0; frame < 100; frame++) {
         flow(u, N - 10, 0, 45);
         flow(v, N - 10, -5.0f, 5);
 
