@@ -16,18 +16,21 @@ void add_source(const array2f *array, const array2f *source, float dt )
 
 void set_bnd(int N, int b, const array2f *x)
 {
-	for (size_t j = 1; j < N - 1; j++) {
-		x->buffer[IX(0  , j)] = b==1 ? -x->buffer[IX(1, j)] : x->buffer[IX(1, j)];
-		x->buffer[IX(N+1, j)] = b==1 ? -x->buffer[IX(N, j)] : x->buffer[IX(N, j)];
+	const size_t w = x->resolution.width;
+	const size_t h = x->resolution.height;
+
+	for (size_t i = 1; i < w - 1; i++) {
+		x->buffer[IX(i, 0  )] = b==2 ? -x->buffer[IX(i,   1)] : x->buffer[IX(i,   1)];
+		x->buffer[IX(i, h-1)] = b==2 ? -x->buffer[IX(i, h-2)] : x->buffer[IX(i, h-2)];
 	}
-	for (size_t i = 1; i < N -  1; i++) {
-		x->buffer[IX(i, 0  )] = b==2 ? -x->buffer[IX(i, 1)] : x->buffer[IX(i, 1)];
-		x->buffer[IX(i, N+1)] = b==2 ? -x->buffer[IX(i, N)] : x->buffer[IX(i, N)];
+	for (size_t j = 1; j < h - 1; j++) {
+		x->buffer[IX(0  , j)] = b==1 ? -x->buffer[IX(1, j)] : x->buffer[IX(1, j)];
+		x->buffer[IX(w-1, j)] = b==1 ? -x->buffer[IX(w-2, j)] : x->buffer[IX(w-2, j)];
 	}
 	x->buffer[IX(0  ,0  )] = 0.5f*(x->buffer[IX(1,0  )]+x->buffer[IX(0  ,1)]);
-	x->buffer[IX(0  ,N+1)] = 0.5f*(x->buffer[IX(1,N+1)]+x->buffer[IX(0  ,N)]);
-	x->buffer[IX(N+1,0  )] = 0.5f*(x->buffer[IX(N,0  )]+x->buffer[IX(N+1,1)]);
-	x->buffer[IX(N+1,N+1)] = 0.5f*(x->buffer[IX(N,N+1)]+x->buffer[IX(N+1,N)]);
+	x->buffer[IX(0  ,h-1)] = 0.5f*(x->buffer[IX(1,h-1)]+x->buffer[IX(0  ,h-2)]);
+	x->buffer[IX(w-1,0  )] = 0.5f*(x->buffer[IX(w-2,0  )]+x->buffer[IX(w-1,1)]);
+	x->buffer[IX(w-1,h-1)] = 0.5f*(x->buffer[IX(w-2,h-1)]+x->buffer[IX(w-1,h-2)]);
 }
 
 void lin_solve ( int N, int b, const array2f *x, const array2f *x0, float a, float c )
