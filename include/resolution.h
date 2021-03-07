@@ -8,4 +8,6 @@ typedef struct {
     size_t height;
 } resolution_t;
 
+size_t resolution_area(resolution_t resolution);
+
 #endif

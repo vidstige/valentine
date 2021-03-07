@@ -33,3 +33,7 @@ array2f array2f_pad(const array2f *array, size_t pad_x, size_t pad_y) {
     a.owns_buffer = false;
     return a;
 }
+
+size_t array2f_area(const array2f *array) {
+    return resolution_area(array->resolution);
+}
