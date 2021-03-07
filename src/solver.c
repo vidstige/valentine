@@ -16,15 +16,13 @@ void add_source(const array2f *array, const array2f *source, float dt )
 
 void set_bnd(int N, int b, const array2f *x)
 {
-	int i;
-
-	for ( i=1 ; i<=N ; i++ ) {
-		x->buffer[IX(0  ,i)] = b==1 ? -x->buffer[IX(1,i)] : x->buffer[IX(1,i)];
-		x->buffer[IX(N+1,i)] = b==1 ? -x->buffer[IX(N,i)] : x->buffer[IX(N,i)];
+	for (size_t j = 1; j < N - 1; j++) {
+		x->buffer[IX(0  , j)] = b==1 ? -x->buffer[IX(1, j)] : x->buffer[IX(1, j)];
+		x->buffer[IX(N+1, j)] = b==1 ? -x->buffer[IX(N, j)] : x->buffer[IX(N, j)];
 	}
-	for ( i=1 ; i<=N ; i++ ) {
-		x->buffer[IX(i,0  )] = b==2 ? -x->buffer[IX(i,1)] : x->buffer[IX(i,1)];
-		x->buffer[IX(i,N+1)] = b==2 ? -x->buffer[IX(i,N)] : x->buffer[IX(i,N)];
+	for (size_t i = 1; i < N -  1; i++) {
+		x->buffer[IX(i, 0  )] = b==2 ? -x->buffer[IX(i, 1)] : x->buffer[IX(i, 1)];
+		x->buffer[IX(i, N+1)] = b==2 ? -x->buffer[IX(i, N)] : x->buffer[IX(i, N)];
 	}
 	x->buffer[IX(0  ,0  )] = 0.5f*(x->buffer[IX(1,0  )]+x->buffer[IX(0  ,1)]);
 	x->buffer[IX(0  ,N+1)] = 0.5f*(x->buffer[IX(1,N+1)]+x->buffer[IX(0  ,N)]);
