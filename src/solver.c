@@ -61,21 +61,20 @@ void diffuse(int b, const array2f *x, const array2f *x0, float diff, float dt )
 void advect( int N, int b, const array2f *d, const array2f *d0, const array2f *u, const array2f *v, float dt)
 {
 	int i0, j0, i1, j1;
-	float x, y, s0, t0, s1, t1, dt0;
+	float x, y, s0, t0, s1, t1;
 
 	const size_t w = d0->resolution.width;
 	const size_t h = d0->resolution.height;
 
-	dt0 = dt * N;
 	for (size_t j = 1; j < h - 1; j++) {
 		for (size_t i = 1; i < w - 1; i++) {
-			x = i - dt0 * u->buffer[IX(i,j)];
-			if (x<0.5f) x=0.5f;
-			if (x>N+0.5f) x=N+0.5f;
+			x = i - (dt * (w - 2)) * array2f_get(u, i, j);
+			if (x < 0.5f) x = 0.5f;
+			if (x > N+0.5f) x = N + 0.5f;
 
-			y = j - dt0 * v->buffer[IX(i,j)];
-			if (y<0.5f) y=0.5f;
-			if (y>N+0.5f) y=N+0.5f;
+			y = j - (dt * (h - 2)) * array2f_get(v, i, j);
+			if (y < 0.5f) y = 0.5f;
+			if (y > N+0.5f) y = N + 0.5f;
 			
 			i0=(int)x;
 			i1=i0+1;
