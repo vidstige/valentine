@@ -174,6 +174,8 @@ int main() {
     
     array2f_rand(array2f_pad(&dens, 2, 2), 1);
     //dens_from_alpha(&im, dens.buffer, N);
+
+    bounds_t bounds;
     
     //image_scale
     const image dens_im = create_image(N, N);
@@ -183,8 +185,8 @@ int main() {
 
         clear(&screen, 0xff222222);
         //get_from_UI ( dens_prev, u_prev, v_prev );
-        velocity_step(&u, &v, &u_prev, &v_prev, visc, dt);
-        density_step(&dens, &dens_prev, &u, &v, diff, dt);
+        velocity_step(&u, &v, &u_prev, &v_prev, &bounds, visc, dt);
+        density_step(&dens, &dens_prev, &u, &v, &bounds, diff, dt);
         draw_dens(&dens_im, array2f_pad(&dens, 1, 1));
         image_scale(&screen, &dens_im);
         //blit(&screen, &im, center(screen.resolution, im.resolution));

@@ -1,3 +1,4 @@
+#include "solver.h"
 #include "array2f.h"
 
 #define SWAP(x0,x) {array2f * tmp=x0;x0=x;x=tmp;}
@@ -13,7 +14,7 @@ void add_source(const array2f *array, const array2f *source, float dt )
 	}
 }
 
-void set_bnd(int b, const array2f *x)
+void set_bnd(int b, const array2f *x, const bounds_t *bounds)
 {
 	const size_t w = x->resolution.width;
 	const size_t h = x->resolution.height;
@@ -50,14 +51,14 @@ void lin_solve(int b, const array2f *x, const array2f *x0, float a, float c)
 	}
 }
 
-void diffuse(int b, const array2f *x, const array2f *x0, float diff, float dt )
+void diffuse(int b, const array2f *x, const array2f *x0, const bounds_t *bounds, float diff, float dt )
 {
 	float a = dt * diff * array2f_area(x);
 	lin_solve(b, x, x0, a, 1 + 4 * a);
-	set_bnd(b, x);
+	set_bnd(b, x, bounds);
 }
 
-void advect(int b, const array2f *d, const array2f *d0, const array2f *u, const array2f *v, float dt)
+void advect(int b, const array2f *d, const array2f *d0, const array2f *u, const array2f *v, const bounds_t *bounds, float dt)
 {
 	const size_t w = d0->resolution.width;
 	const size_t h = d0->resolution.height;
@@ -81,10 +82,10 @@ void advect(int b, const array2f *d, const array2f *d0, const array2f *u, const 
 								  s1 * (t0 * array2f_get(d0, i1, j0) + t1 * array2f_get(d0, i1, j1));
 		}
 	}
-	set_bnd(b, d);
+	set_bnd(b, d, bounds);
 }
 
-void project(const array2f *u, const array2f *v, const array2f *p, const array2f *div)
+void project(const array2f *u, const array2f *v, const array2f *p, const array2f *div, const bounds_t *bounds)
 {
 	const size_t w = u->resolution.width;
 	const size_t h = u->resolution.height;
@@ -98,10 +99,10 @@ void project(const array2f *u, const array2f *v, const array2f *p, const array2f
 			ARRAY2F_AT(p, i, j) = 0;
 		}
 	}
-	set_bnd(0, div); set_bnd(0, p);
+	set_bnd(0, div, bounds); set_bnd(0, p, bounds);
 
 	lin_solve(0, p, div, 1, 4);
-	set_bnd(0, p);
+	set_bnd(0, p, bounds);
 
 	for (size_t j = 1; j < h - 1; j++) {
 		for (size_t i = 1; i < w - 1; i++) {
@@ -109,24 +110,24 @@ void project(const array2f *u, const array2f *v, const array2f *p, const array2f
 			ARRAY2F_AT(v, i, j) -= 0.5f * (h-2) * (array2f_get(p, i, j + 1) - array2f_get(p, i, j - 1));
 		}
 	}
-	set_bnd(1, u); set_bnd(2, v);
+	set_bnd(1, u, bounds); set_bnd(2, v, bounds);
 }
 
-void density_step(array2f *x, array2f *x0, array2f *u, array2f *v, float diff, float dt)
+void density_step(array2f *x, array2f *x0, array2f *u, array2f *v, const bounds_t *bounds, float diff, float dt)
 {
 	add_source(x, x0, dt);
-	SWAP(x0, x); diffuse(0, x, x0, diff, dt);
-	SWAP(x0, x); advect (0, x, x0, u, v, dt);
+	SWAP(x0, x); diffuse(0, x, x0, bounds, diff, dt);
+	SWAP(x0, x); advect (0, x, x0, u, v, bounds, dt);
 }
 
-void velocity_step(array2f *u, array2f *v, array2f *u0, array2f *v0, float visc, float dt)
+void velocity_step(array2f *u, array2f *v, array2f *u0, array2f *v0, const bounds_t *bounds, float visc, float dt)
 {
 	add_source(u, u0, dt); add_source(v, v0, dt);
-	SWAP(u0, u); diffuse(1, u, u0, visc, dt);
-	SWAP(v0, v); diffuse(2, v, v0, visc, dt);
-	project(u, v, u0, v0);
+	SWAP(u0, u); diffuse(1, u, u0, bounds, visc, dt);
+	SWAP(v0, v); diffuse(2, v, v0, bounds, visc, dt);
+	project(u, v, u0, v0, bounds);
 	SWAP(u0, u); SWAP(v0, v);
-	advect(1, u, u0, u0, v0, dt);
-	advect(2, v, v0, u0, v0, dt);
-	project(u, v, u0, v0);
+	advect(1, u, u0, u0, v0, bounds, dt);
+	advect(2, v, v0, u0, v0, bounds, dt);
+	project(u, v, u0, v0, bounds);
 }
