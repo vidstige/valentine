@@ -78,8 +78,8 @@ void advect( int N, int b, const array2f *d, const array2f *d0, const array2f *u
 
 			float s1 = x - i0, s0 = 1 - s1;
 			float t1 = y - j0, t0 = 1 - t1;
-			d->buffer[IX(i,j)] = s0 * (t0 * d0->buffer[IX(i0,j0)] + t1 * d0->buffer[IX(i0,j1)]) +
-								 s1 * (t0 * d0->buffer[IX(i1,j0)] + t1 * d0->buffer[IX(i1,j1)]);
+			ARRAY2F_AT(d, i, j) = s0 * (t0 * array2f_get(d0, i0, j0) + t1 * array2f_get(d0, i0, j1)) +
+								  s1 * (t0 * array2f_get(d0, i1, j0) + t1 * array2f_get(d0, i1, j1));
 		}
 	}
 	set_bnd(b, d);
