@@ -43,11 +43,11 @@ void lin_solve ( int N, int b, float * x, float * x0, float a, float c )
 	}
 }
 
-void diffuse ( int N, int b, float * x, float * x0, float diff, float dt )
+void diffuse(int N, int b, const array2f *x, const array2f *x0, float diff, float dt )
 {
-	float a=dt*diff*N*N;
-	lin_solve ( N, b, x, x0, a, 1+4*a );
-	set_bnd ( N, b, x );
+	float a=dt * diff * N * N;
+	lin_solve( N, b, x->buffer, x0->buffer, a, 1 + 4 * a);
+	set_bnd(N, b, x->buffer);
 }
 
 void advect ( int N, int b, float * d, float * d0, float * u, float * v, float dt )
@@ -94,15 +94,15 @@ void project ( int N, float * u, float * v, float * p, float * div )
 void density_step(size_t N, array2f *x, array2f *x0, array2f *u, array2f *v, float diff, float dt)
 {
 	add_source(x, x0, dt);
-	SWAP ( x0, x ); diffuse ( N, 0, x->buffer, x0->buffer, diff, dt );
+	SWAP ( x0, x ); diffuse( N, 0, x, x0, diff, dt );
 	SWAP ( x0, x ); advect ( N, 0, x->buffer, x0->buffer, u->buffer, v->buffer, dt );
 }
 
 void velocity_step(size_t N, array2f *u, array2f *v, array2f *u0, array2f *v0, float visc, float dt)
 {
 	add_source(u, u0, dt); add_source(v, v0, dt);
-	SWAP ( u0, u ); diffuse ( N, 1, u->buffer, u0->buffer, visc, dt );
-	SWAP ( v0, v ); diffuse ( N, 2, v->buffer, v0->buffer, visc, dt );
+	SWAP ( u0, u ); diffuse(N, 1, u, u0, visc, dt );
+	SWAP ( v0, v ); diffuse(N, 2, v, v0, visc, dt );
 	project ( N, u->buffer, v->buffer, u0->buffer, v0->buffer );
 	SWAP ( u0, u ); SWAP ( v0, v );
 	advect ( N, 1, u->buffer, u0->buffer, u0->buffer, v0->buffer, dt );
