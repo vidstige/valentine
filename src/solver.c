@@ -1,5 +1,7 @@
+#include "array2f.h"
+
 #define IX(i,j) ((i)+(N+2)*(j))
-#define SWAP(x0,x) {float * tmp=x0;x0=x;x=tmp;}
+#define SWAP(x0,x) {array2f * tmp=x0;x0=x;x=tmp;}
 #define FOR_EACH_CELL for ( i=1 ; i<=N ; i++ ) { for ( j=1 ; j<=N ; j++ ) {
 #define END_FOR }}
 
@@ -84,20 +86,21 @@ void project ( int N, float * u, float * v, float * p, float * div )
 	set_bnd ( N, 1, u ); set_bnd ( N, 2, v );
 }
 
-void density_step(int N, float * x, float * x0, float * u, float * v, float diff, float dt)
+void density_step(size_t N, array2f *x, array2f *x0, array2f *u, array2f *v, float diff, float dt)
 {
-	add_source ( N, x, x0, dt );
-	SWAP ( x0, x ); diffuse ( N, 0, x, x0, diff, dt );
-	SWAP ( x0, x ); advect ( N, 0, x, x0, u, v, dt );
+	add_source ( N, x->buffer, x0->buffer, dt );
+	SWAP ( x0, x ); diffuse ( N, 0, x->buffer, x0->buffer, diff, dt );
+	SWAP ( x0, x ); advect ( N, 0, x->buffer, x0->buffer, u->buffer, v->buffer, dt );
 }
 
-void velocity_step(int N, float * u, float * v, float * u0, float * v0, float visc, float dt)
+void velocity_step(size_t N, array2f *u, array2f *v, array2f *u0, array2f *v0, float visc, float dt)
 {
-	add_source ( N, u, u0, dt ); add_source ( N, v, v0, dt );
-	SWAP ( u0, u ); diffuse ( N, 1, u, u0, visc, dt );
-	SWAP ( v0, v ); diffuse ( N, 2, v, v0, visc, dt );
-	project ( N, u, v, u0, v0 );
+	add_source ( N, u->buffer, u0->buffer, dt ); add_source ( N, v->buffer, v0->buffer, dt );
+	SWAP ( u0, u ); diffuse ( N, 1, u->buffer, u0->buffer, visc, dt );
+	SWAP ( v0, v ); diffuse ( N, 2, v->buffer, v0->buffer, visc, dt );
+	project ( N, u->buffer, v->buffer, u0->buffer, v0->buffer );
 	SWAP ( u0, u ); SWAP ( v0, v );
-	advect ( N, 1, u, u0, u0, v0, dt ); advect ( N, 2, v, v0, u0, v0, dt );
-	project ( N, u, v, u0, v0 );
+	advect ( N, 1, u->buffer, u0->buffer, u0->buffer, v0->buffer, dt );
+	advect ( N, 2, v->buffer, v0->buffer, u0->buffer, v0->buffer, dt );
+	project ( N, u->buffer, v->buffer, u0->buffer, v0->buffer );
 }
