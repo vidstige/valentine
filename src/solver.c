@@ -14,22 +14,22 @@ void add_source(const array2f *array, const array2f *source, float dt )
 	}
 }
 
-void set_bnd(int N, int b, float * x)
+void set_bnd(int N, int b, const array2f *x)
 {
 	int i;
 
 	for ( i=1 ; i<=N ; i++ ) {
-		x[IX(0  ,i)] = b==1 ? -x[IX(1,i)] : x[IX(1,i)];
-		x[IX(N+1,i)] = b==1 ? -x[IX(N,i)] : x[IX(N,i)];
+		x->buffer[IX(0  ,i)] = b==1 ? -x->buffer[IX(1,i)] : x->buffer[IX(1,i)];
+		x->buffer[IX(N+1,i)] = b==1 ? -x->buffer[IX(N,i)] : x->buffer[IX(N,i)];
 	}
 	for ( i=1 ; i<=N ; i++ ) {
-		x[IX(i,0  )] = b==2 ? -x[IX(i,1)] : x[IX(i,1)];
-		x[IX(i,N+1)] = b==2 ? -x[IX(i,N)] : x[IX(i,N)];
+		x->buffer[IX(i,0  )] = b==2 ? -x->buffer[IX(i,1)] : x->buffer[IX(i,1)];
+		x->buffer[IX(i,N+1)] = b==2 ? -x->buffer[IX(i,N)] : x->buffer[IX(i,N)];
 	}
-	x[IX(0  ,0  )] = 0.5f*(x[IX(1,0  )]+x[IX(0  ,1)]);
-	x[IX(0  ,N+1)] = 0.5f*(x[IX(1,N+1)]+x[IX(0  ,N)]);
-	x[IX(N+1,0  )] = 0.5f*(x[IX(N,0  )]+x[IX(N+1,1)]);
-	x[IX(N+1,N+1)] = 0.5f*(x[IX(N,N+1)]+x[IX(N+1,N)]);
+	x->buffer[IX(0  ,0  )] = 0.5f*(x->buffer[IX(1,0  )]+x->buffer[IX(0  ,1)]);
+	x->buffer[IX(0  ,N+1)] = 0.5f*(x->buffer[IX(1,N+1)]+x->buffer[IX(0  ,N)]);
+	x->buffer[IX(N+1,0  )] = 0.5f*(x->buffer[IX(N,0  )]+x->buffer[IX(N+1,1)]);
+	x->buffer[IX(N+1,N+1)] = 0.5f*(x->buffer[IX(N,N+1)]+x->buffer[IX(N+1,N)]);
 }
 
 void lin_solve ( int N, int b, const array2f *x, const array2f *x0, float a, float c )
@@ -50,7 +50,7 @@ void diffuse(int N, int b, const array2f *x, const array2f *x0, float diff, floa
 {
 	float a = dt * diff * N * N;
 	lin_solve( N, b, x, x0, a, 1 + 4 * a);
-	set_bnd(N, b, x->buffer);
+	set_bnd(N, b, x);
 }
 
 void advect( int N, int b, const array2f *d, const array2f *d0, const array2f *u, const array2f *v, float dt)
@@ -76,7 +76,7 @@ void advect( int N, int b, const array2f *d, const array2f *d0, const array2f *u
 								s1*(t0*d0->buffer[IX(i1,j0)]+t1*d0->buffer[IX(i1,j1)]);
 		}
 	}
-	set_bnd ( N, b, d->buffer );
+	set_bnd(N, b, d);
 }
 
 void project(int N, const array2f *u, const array2f *v, const array2f *p, const array2f *div)
@@ -90,10 +90,10 @@ void project(int N, const array2f *u, const array2f *v, const array2f *p, const 
 			p->buffer[IX(i,j)] = 0;
 		}
 	}
-	set_bnd ( N, 0, div->buffer ); set_bnd ( N, 0, p->buffer );
+	set_bnd(N, 0, div); set_bnd( N, 0, p);
 
-	lin_solve ( N, 0, p, div, 1, 4 );
-	set_bnd ( N, 0, p->buffer );
+	lin_solve(N, 0, p, div, 1, 4);
+	set_bnd(N, 0, p);
 
 	for (size_t j = 1; j < h - 1; j++) {
 		for (size_t i = 1; i < w - 1; i++) {
@@ -101,7 +101,7 @@ void project(int N, const array2f *u, const array2f *v, const array2f *p, const 
 			v->buffer[IX(i,j)] -= 0.5f*N*(p->buffer[IX(i,j+1)]-p->buffer[IX(i,j-1)]);
 		}
 	}
-	set_bnd ( N, 1, u->buffer ); set_bnd ( N, 2, v->buffer );
+	set_bnd(N, 1, u); set_bnd(N, 2, v);
 }
 
 void density_step(size_t N, array2f *x, array2f *x0, array2f *u, array2f *v, float diff, float dt)
