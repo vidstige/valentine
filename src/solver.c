@@ -21,6 +21,8 @@ void set_bnd(int N, int b, float * x)
 	for ( i=1 ; i<=N ; i++ ) {
 		x[IX(0  ,i)] = b==1 ? -x[IX(1,i)] : x[IX(1,i)];
 		x[IX(N+1,i)] = b==1 ? -x[IX(N,i)] : x[IX(N,i)];
+	}
+	for ( i=1 ; i<=N ; i++ ) {
 		x[IX(i,0  )] = b==2 ? -x[IX(i,1)] : x[IX(i,1)];
 		x[IX(i,N+1)] = b==2 ? -x[IX(i,N)] : x[IX(i,N)];
 	}
