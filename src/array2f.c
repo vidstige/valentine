@@ -23,6 +23,17 @@ void array2f_set(const array2f *array, size_t x, size_t y, float value) {
     array->buffer[y * array->stride + x] = value;
 }
 
+void array2f_filter(array2f *array, array2f_operator_t operator) {
+    size_t index = 0;
+    for (int y = 0; y < array->resolution.height; y++) {
+        for (int x = 0; x < array->resolution.width; x++) {
+            array->buffer[index] = operator(array->buffer[index]);
+            index++;
+        }
+        index += (array->stride - array->resolution.width);
+    }
+}
+
 // Sub-array by padding
 array2f array2f_pad(const array2f *array, size_t pad_x, size_t pad_y) {
     array2f a;
