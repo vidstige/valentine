@@ -115,12 +115,11 @@ position_t center(resolution_t outer, resolution_t inner) {
     return p;
 }
 
-void dens_from_alpha(const image *image, float *dens, size_t N) {
+void alpha_to_array2f(const image *image, array2f *array) {
     for (size_t y = 0; y < image_height(image); y++) {
         for (size_t x = 0; x < image_width(image); x++) {
             const color_t color = image_pixel(image, x, y);
-            const size_t alpha = get_alpha(color);
-            dens[y * (N+2) + x + 1] = alpha;
+            array2f_set(array, x, y, get_alpha(color));
         }
     }
 }
@@ -176,6 +175,30 @@ void box_bounds(const bounds_t* bounds) {
 	}
 }
 
+float threshold(float value) {
+    if (value > 128) return 1.0f;
+    return 0.0f;
+}
+
+void bounds_from_image(bounds_t* bounds, const image *image) {
+    array2f bounds_source = create_array2f(image->resolution.width, image->resolution.height);
+    alpha_to_array2f(image, &bounds_source); // TODO: scale bounds_source to bounds
+    
+    // threshold
+    array2f_filter(&bounds_source, threshold);
+
+    for (int j = 0; j < bounds_source.resolution.height - 1; j++) {
+        for (int i = 0; i < bounds_source.resolution.width - 1; i++) {
+            const float dx = array2f_get(&bounds_source, i + 1, j) - array2f_get(&bounds_source, i, j);
+            const float dy = array2f_get(&bounds_source, i, j + 1) - array2f_get(&bounds_source, i, j);
+            array2f_set(&(bounds->bx), i, j, dx);
+            array2f_set(&(bounds->by), i, j, dy);
+        }
+    }
+
+    destroy_array2f(&bounds_source);
+}
+
 
 int main() {
     srand(1337);
@@ -196,15 +219,17 @@ int main() {
     const image im = load_rgba("hearth.bgra", 100, 100);
     
     array2f_rand(array2f_pad(&dens, 2, 2), 1);
-    //dens_from_alpha(&im, dens.buffer, N);
 
+    // Create bounds
     bounds_t bounds;
     bounds.bx = create_array2f(N + 2, N + 2);
     bounds.by = create_array2f(N + 2, N + 2);
     array2f_fill(bounds.bx, 0.f);
     array2f_fill(bounds.by, 0.f);
+    bounds_from_image(&bounds, &im);
     box_bounds(&bounds);
-    
+
+        
     //image_scale
     const image dens_im = create_image(N, N);
     for (size_t frame = 0; frame < 100; frame++) {
