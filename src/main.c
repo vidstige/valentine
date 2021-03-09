@@ -218,7 +218,7 @@ int main() {
     image screen = create_image(506, 253);
     const image im = load_rgba("heart.bgra", 100, 100);
     
-    array2f_rand(array2f_pad(&dens, 2, 2), 1);
+    //array2f_rand(array2f_pad(&dens, 2, 2), 1);
 
     // Create bounds
     bounds_t bounds;
@@ -228,13 +228,17 @@ int main() {
     array2f_fill(bounds.by, 0.f);
     bounds_from_image(&bounds, &im);
     box_bounds(&bounds);
-
         
     //image_scale
     const image dens_im = create_image(N, N);
-    for (size_t frame = 0; frame < 100; frame++) {
-        flow(u, N - 10, 0, 45);
-        flow(v, N - 10, -5.0f, 5);
+    for (size_t frame = 0; frame < 1000; frame++) {
+        // Inject matter
+        for (size_t x = 1; x < dens.resolution.width - 1; x++) {
+            array2f_set(&dens, x, dens.resolution.height - 3, 0.5f);
+        }
+        // Create upwards swirly flow
+        flow(u, N - 3, 0, 20);
+        flow(v, N - 3, -3.0f, 3);
 
         clear(&screen, 0xff222222);
         //get_from_UI ( dens_prev, u_prev, v_prev );
