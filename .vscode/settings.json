@@ -2,5 +2,16 @@
     "files.associations": {
         "src/*.c": "c",
         "include/*.h": "c",
-    }
+        "*.backup": "c",
+        "solver.h": "c",
+        "array2f.h": "c"
+    },
+    "search.exclude": {
+        "**/venv/**": true,
+        "**/.git/**": true,
+        },
+    "files.watcherExclude": {
+        "**/.git/**": true,
+        "**/venv/**": true
+    },
 }
