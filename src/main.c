@@ -216,7 +216,7 @@ int main() {
     const float visc = 0.001, diff = 0.0;
     const float dt = 0.01;
     image screen = create_image(506, 253);
-    const image im = load_rgba("hearth.bgra", 100, 100);
+    const image im = load_rgba("heart.bgra", 100, 100);
     
     array2f_rand(array2f_pad(&dens, 2, 2), 1);
 
