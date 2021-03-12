@@ -40,7 +40,7 @@ void set_bnd(int b, const array2f *x, const bounds_t *bounds)
 	}
 
 	// Check dynamic boundaries
-	array2f tmp = create_array2f(x->resolution.width, x->resolution.height);
+	array2f tmp = create_array2f(x->resolution);
 	for (size_t j = 0; j < h; j++) {
 		for (size_t i = 0; i < w; i++) {
 			int dx = (int)array2f_get(&bounds->bx, i, j);

@@ -181,7 +181,7 @@ float threshold(float value) {
 }
 
 void bounds_from_image(bounds_t* bounds, const image *image) {
-    array2f bounds_source = create_array2f(image->resolution.width, image->resolution.height);
+    array2f bounds_source = create_array2f(image->resolution);
     alpha_to_array2f(image, &bounds_source); // TODO: scale bounds_source to bounds
     
     // threshold
@@ -203,15 +203,15 @@ void bounds_from_image(bounds_t* bounds, const image *image) {
 int main() {
     srand(1337);
 
-    const size_t N = 100;
+    const resolution_t resolution = {100 + 2, 100 + 2};
 
-    array2f u = create_array2f(N + 2, N + 2); array2f_fill(u, 0.f);
-    array2f v = create_array2f(N + 2, N + 2); array2f_fill(v, 0.f);
-    array2f u_prev = create_array2f(N + 2, N + 2); array2f_fill(u_prev, 0.f);
-    array2f v_prev = create_array2f(N + 2, N + 2); array2f_fill(v_prev, 0.f);
+    array2f u = create_array2f(resolution); array2f_fill(u, 0.f);
+    array2f v = create_array2f(resolution); array2f_fill(v, 0.f);
+    array2f u_prev = create_array2f(resolution); array2f_fill(u_prev, 0.f);
+    array2f v_prev = create_array2f(resolution); array2f_fill(v_prev, 0.f);
     
-    array2f dens = create_array2f(N + 2, N + 2); array2f_fill(dens, 0.f);
-    array2f dens_prev = create_array2f(N + 2, N + 2); array2f_fill(dens_prev, 0.f);
+    array2f dens = create_array2f(resolution); array2f_fill(dens, 0.f);
+    array2f dens_prev = create_array2f(resolution); array2f_fill(dens_prev, 0.f);
 
     const float visc = 0.001, diff = 0.0;
     const float dt = 0.01;
@@ -222,8 +222,8 @@ int main() {
 
     // Create bounds
     bounds_t bounds;
-    bounds.bx = create_array2f(N + 2, N + 2);
-    bounds.by = create_array2f(N + 2, N + 2);
+    bounds.bx = create_array2f(resolution);
+    bounds.by = create_array2f(resolution);
     array2f_fill(bounds.bx, 0.f);
     array2f_fill(bounds.by, 0.f);
     bounds_from_image(&bounds, &im);
@@ -239,15 +239,15 @@ int main() {
         color_parse("#fdeff9"));
         
     //image_scale
-    const image dens_im = create_image(N, N);
+    const image dens_im = create_image(100, 100);
     for (size_t frame = 0; frame < 1000; frame++) {
         // Inject matter
         for (size_t x = 1; x < dens.resolution.width - 1; x++) {
             array2f_set(&dens, x, dens.resolution.height - 3, 0.5f);
         }
         // Create upwards swirly flow
-        flow(u, N - 3, 0, 20);
-        flow(v, N - 3, -3.0f, 3);
+        flow(u, resolution.height - 3, 0, 20);
+        flow(v, resolution.height - 3, -3.0f, 3);
 
         clear(&screen, 0xff222222);
         //get_from_UI ( dens_prev, u_prev, v_prev );

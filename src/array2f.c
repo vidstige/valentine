@@ -1,12 +1,11 @@
 #include "array2f.h"
 #include "resolution.h"
 
-array2f create_array2f(size_t width, size_t height) {
+array2f create_array2f(resolution_t resolution) {
     array2f array;
-    array.buffer = malloc(sizeof(float) * width * height);
-    array.resolution.width = width;
-    array.resolution.height = height;
-    array.stride = width;
+    array.buffer = malloc(sizeof(float) * resolution_area(resolution));
+    array.resolution = resolution;
+    array.stride = resolution.width;
     array.owns_buffer = true;
     return array;
 }

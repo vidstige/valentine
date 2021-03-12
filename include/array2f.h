@@ -19,7 +19,7 @@ typedef float (*array2f_operator_t)(float);
 
 void array2f_filter(array2f *array, array2f_operator_t operator);
 
-array2f create_array2f(size_t width, size_t height);
+array2f create_array2f(resolution_t resolution);
 void destroy_array2f(const array2f *array);
 float array2f_get(const array2f *array, size_t x, size_t y);
 void array2f_set(const array2f *array, size_t x, size_t y, float value);
