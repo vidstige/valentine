@@ -229,7 +229,14 @@ int main() {
     bounds_from_image(&bounds, &im);
     //box_bounds(&bounds);
 
-    colormap_t colormap = create_colormap(2, rgb(0, 0, 0), rgb(255, 255, 255));
+    // black -> white
+    //colormap_t colormap = create_colormap(2, rgb(0, 0, 0), rgb(0xff, 0xff, 0xff));
+    // Argon
+    colormap_t colormap = create_colormap(4,
+        color_parse("#03001e"),
+        color_parse("#7303c0"),
+        color_parse("#ec38bc"),
+        color_parse("#fdeff9"));
         
     //image_scale
     const image dens_im = create_image(N, N);

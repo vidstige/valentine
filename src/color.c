@@ -3,6 +3,13 @@
 
 #include "color.h"
 
+color_t color_parse(const char* str) {
+    if (*str == '#') str++;
+    color_t color = (color_t)strtol(str, NULL, 16);
+    color |= 0xff000000; // force alpha to 0xff
+    return color;
+}
+
 color_t rgba(uint32_t r, uint32_t g, uint32_t b, uint32_t alpha) {
     return alpha << 24 | (r & 0xff) << 16 | (g & 0xff) << 8 | (b & 0xff);
 }
