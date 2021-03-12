@@ -216,7 +216,7 @@ int main() {
     const float visc = 0.001, diff = 0.0;
     const float dt = 0.01;
     image screen = create_image(506, 253);
-    const image im = load_rgba("heart.bgra", 100, 100);
+    const image im = load_rgba("heart2.bgra", 64, 64);
     
     //array2f_rand(array2f_pad(&dens, 2, 2), 1);
 
@@ -227,7 +227,7 @@ int main() {
     array2f_fill(bounds.bx, 0.f);
     array2f_fill(bounds.by, 0.f);
     bounds_from_image(&bounds, &im);
-    box_bounds(&bounds);
+    //box_bounds(&bounds);
         
     //image_scale
     const image dens_im = create_image(N, N);

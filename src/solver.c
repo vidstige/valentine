@@ -29,6 +29,17 @@ void set_bnd(int b, const array2f *x, const bounds_t *bounds)
 	const size_t w = x->resolution.width;
 	const size_t h = x->resolution.height;
 
+	// Always set the edges to closest value
+	for (size_t j = 0; j < h; j++) {
+		ARRAY2F_AT(x, 0, j) = array2f_get(x, 1, j);
+		ARRAY2F_AT(x, w - 1, j) = array2f_get(x, w - 2, j);
+	}
+	for (size_t i = 0; i < w; i++) {
+		ARRAY2F_AT(x, i, 0) = array2f_get(x, i, 1);
+		ARRAY2F_AT(x, i, h - 1) = array2f_get(x, i, h - 2);
+	}
+
+	// Check dynamic boundaries
 	array2f tmp = create_array2f(x->resolution.width, x->resolution.height);
 	for (size_t j = 0; j < h; j++) {
 		for (size_t i = 0; i < w; i++) {
