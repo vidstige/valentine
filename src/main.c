@@ -209,7 +209,7 @@ void center_image(image* im, resolution_t resolution) {
 int main() {
     srand(1337);
 
-    const resolution_t resolution = {100 + 2, 100 + 2};
+    const resolution_t resolution = {506/4 + 2, 253/4 + 2};
 
     array2f u = create_array2f(resolution); array2f_fill(u, 0.f);
     array2f v = create_array2f(resolution); array2f_fill(v, 0.f);
@@ -250,11 +250,11 @@ int main() {
     for (size_t frame = 0; frame < 1000; frame++) {
         // Inject matter
         for (size_t x = 1; x < dens.resolution.width - 1; x++) {
-            array2f_set(&dens, x, dens.resolution.height - 3, 0.5f);
+            array2f_set(&dens, x, dens.resolution.height - 3, 0.2f);
         }
         // Create upwards swirly flow
-        flow(u, resolution.height - 3, 0, 20);
-        flow(v, resolution.height - 3, -3.0f, 3);
+        flow(u, resolution.height - 3, 0, 10);
+        flow(v, resolution.height - 3, resolution.height * -0.03, 3);
 
         clear(&screen, 0xff222222);
         //get_from_UI ( dens_prev, u_prev, v_prev );
