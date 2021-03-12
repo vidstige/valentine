@@ -239,7 +239,7 @@ int main() {
         color_parse("#fdeff9"));
         
     //image_scale
-    const image dens_im = create_image(100, 100);
+    const image dens_im = create_image(resolution.width - 2, resolution.height - 2);
     for (size_t frame = 0; frame < 1000; frame++) {
         // Inject matter
         for (size_t x = 1; x < dens.resolution.width - 1; x++) {
