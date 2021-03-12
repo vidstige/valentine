@@ -90,9 +90,7 @@ void blit(const image *target, const image *source, position_t position) {
         const size_t ty = sy + position.y;
         for (size_t sx = 0; sx < image_width(source); sx++) {
             const size_t tx = sx + position.x;
-            const color_t tc = target->buffer[tx + ty * target->stride];
-            const color_t sc = source->buffer[sx + sy * source->stride];
-            target->buffer[tx + ty * target->stride] = blend_color(tc, sc);
+            target->buffer[tx + ty * target->stride] = source->buffer[sx + sy * source->stride];
         }
     }
 }
@@ -199,6 +197,14 @@ void bounds_from_image(bounds_t* bounds, const image *image) {
     destroy_array2f(&bounds_source);
 }
 
+// Create a new image with the given resolution and centers the old one inside
+void center_image(image* im, resolution_t resolution) {
+    image tmp = create_image(resolution.width, resolution.height);
+    blit(&tmp, im, center(resolution, im->resolution));
+    // Destroy old image and overwrite with new
+    destroy_image(im);
+    *im = tmp;
+}
 
 int main() {
     srand(1337);
@@ -216,7 +222,7 @@ int main() {
     const float visc = 0.001, diff = 0.0;
     const float dt = 0.01;
     image screen = create_image(506, 253);
-    const image im = load_rgba("heart2.bgra", 64, 64);
+    image im = load_rgba("heart2.bgra", 64, 64);
     
     //array2f_rand(array2f_pad(&dens, 2, 2), 1);
 
@@ -226,6 +232,7 @@ int main() {
     bounds.by = create_array2f(resolution);
     array2f_fill(bounds.bx, 0.f);
     array2f_fill(bounds.by, 0.f);
+    center_image(&im, resolution);
     bounds_from_image(&bounds, &im);
     //box_bounds(&bounds);
 
