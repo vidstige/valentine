@@ -8,6 +8,7 @@
 
 #include "array2f.h"
 #include "color.h"
+#include "colormap.h"
 #include "image.h"
 #include "solver.h"
 
@@ -51,13 +52,13 @@ float lowf(float* array, size_t n) {
     return tmp;
 }
 
-size_t clamp(size_t x, size_t lo, size_t hi) {
+float clampf(float x, float lo, float hi) {
     if (x < lo) return lo;
     if (x > hi) return hi;
     return x;
 }
 
-void draw_dens(const image *image, array2f dens) {
+void draw_dens(const image *image, array2f dens, const colormap_t *colormap) {
     assert(dens.resolution.width <= image_width(image));
     assert(dens.resolution.height <= image_height(image));
     //float hi = highf(dens, size), lo = lowf(dens, size);
@@ -65,9 +66,8 @@ void draw_dens(const image *image, array2f dens) {
     for (size_t y = 0; y < dens.resolution.height; y++) {
         for (size_t x = 0; x < dens.resolution.width; x++) {
             float d = dens.buffer[x + y * dens.stride];
-            //uint32_t intensity = clamp((uint32_t)(255.0f * ((d - lo) / (hi - lo))), 0, 255);
-            uint32_t intensity = clamp((uint32_t)(255.0f * ((d - lo) / (hi - lo))), 0, 255);
-            image->buffer[x + y * image->stride] = rgb(intensity, intensity, intensity);
+            float intensity = clampf((d - lo) / (hi - lo), 0.f, 1.f);
+            image->buffer[x + y * image->stride] = colormap_get(colormap, intensity);
         }
     }
 }
@@ -228,6 +228,8 @@ int main() {
     array2f_fill(bounds.by, 0.f);
     bounds_from_image(&bounds, &im);
     //box_bounds(&bounds);
+
+    colormap_t colormap = create_colormap(2, rgb(0, 0, 0), rgb(255, 255, 255));
         
     //image_scale
     const image dens_im = create_image(N, N);
@@ -244,12 +246,13 @@ int main() {
         //get_from_UI ( dens_prev, u_prev, v_prev );
         velocity_step(&u, &v, &u_prev, &v_prev, &bounds, visc, dt);
         density_step(&dens, &dens_prev, &u, &v, &bounds, diff, dt);
-        draw_dens(&dens_im, array2f_pad(&dens, 1, 1));
+        draw_dens(&dens_im, array2f_pad(&dens, 1, 1), &colormap);
         image_scale(&screen, &dens_im);
         //blit(&screen, &im, center(screen.resolution, im.resolution));
         fwrite(screen.buffer, sizeof(uint32_t), image_pixel_count(&screen), stdout);
     }
     destroy_image(&dens_im);
+    destroy_colormap(&colormap);
 
     destroy_array2f(&bounds.bx);
     destroy_array2f(&bounds.by);
