@@ -6,7 +6,7 @@ SRC     := ./src
 SRCS    := $(wildcard $(SRC)/*.c)
 OBJS    := $(patsubst $(SRC)/%.c,$(OBJ)/%.o,$(SRCS))
 BINARY  := smoked-heart
-CFLAGS  := -I$(INCLUDE)
+CFLAGS  := -I$(INCLUDE) -Wall -Werror -pedantic
 LDLIBS  :=
 
 .PHONY: all run clean
