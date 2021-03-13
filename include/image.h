@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "color.h"
 #include "resolution.h"
 
 typedef struct {

@@ -1,15 +1,14 @@
 #include <assert.h>
-#include <errno.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
 #include <math.h>
 
 #include "array2f.h"
 #include "color.h"
 #include "colormap.h"
 #include "image.h"
+#include "image_io.h"
 #include "solver.h"
 
 #ifndef M_PI
@@ -70,19 +69,6 @@ void draw_dens(const image *image, array2f dens, const colormap_t *colormap) {
             image->buffer[x + y * image->stride] = colormap_get(colormap, intensity);
         }
     }
-}
-
-image load_rgba(const char* filename, size_t width, size_t height) {
-    image image = create_image(width, height);
-    FILE *fp;
-    fp = fopen(filename, "r");
-    if (!fp) {
-        fprintf(stderr, "Could not open '%s': %s\n", filename, strerror(errno));
-        exit(-1);
-    }
-    fread(image.buffer, sizeof(uint32_t), image_pixel_count(&image), fp);
-    fclose(fp);
-    return image;
 }
 
 void blit(const image *target, const image *source, position_t position) {
