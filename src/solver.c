@@ -3,6 +3,10 @@
 
 #define SWAP(x0,x) {array2f * tmp=x0;x0=x;x=tmp;}
 
+int signf(float x) {
+	return (x > 0) - (x < 0);
+}
+
 void add_source(const array2f *array, const array2f *source, float dt )
 {
 	for (size_t y = 0; y < array->resolution.height; y++) {
@@ -43,8 +47,8 @@ void set_bnd(int b, const array2f *x, const bounds_t *bounds)
 	array2f tmp = create_array2f(x->resolution);
 	for (size_t j = 0; j < h; j++) {
 		for (size_t i = 0; i < w; i++) {
-			int dx = (int)array2f_get(&bounds->bx, i, j);
-			int dy = (int)array2f_get(&bounds->by, i, j);
+			int dx = signf(array2f_get(&bounds->bx, i, j));
+			int dy = signf(array2f_get(&bounds->by, i, j));
 			float m = dirty_mirror(b, dx, dy);
 			array2f_set(&tmp, i, j,
 				m * array2f_get(x, i + dx, j + dy)
@@ -52,6 +56,7 @@ void set_bnd(int b, const array2f *x, const bounds_t *bounds)
 		}
 	}
 	
+	// Copy over (could use swap?)
 	for (size_t j = 0; j < h; j++) {
 		for (size_t i = 0; i < w; i++) {
 			array2f_set(x, i, j, array2f_get(&tmp, i, j));
