@@ -47,11 +47,13 @@ void set_bnd(int b, const array2f *x, const bounds_t *bounds)
 	array2f tmp = create_array2f(x->resolution);
 	for (size_t j = 0; j < h; j++) {
 		for (size_t i = 0; i < w; i++) {
-			int dx = signf(array2f_get(&bounds->bx, i, j));
-			int dy = signf(array2f_get(&bounds->by, i, j));
-			float m = dirty_mirror(b, dx, dy);
+			const float dx = array2f_get(&bounds->bx, i, j);
+			const float dy = array2f_get(&bounds->by, i, j);
+			const int dxi = signf(dx);
+			const int dyi = signf(dy);
+			const float m = dirty_mirror(b, dxi, dyi);
 			array2f_set(&tmp, i, j,
-				m * array2f_get(x, i + dx, j + dy)
+				m * array2f_get(x, i + dxi, j + dyi)
 			);
 		}
 	}
