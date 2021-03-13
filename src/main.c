@@ -103,7 +103,7 @@ void alpha_to_array2f(const image *image, array2f *array) {
     for (size_t y = 0; y < image_height(image); y++) {
         for (size_t x = 0; x < image_width(image); x++) {
             const color_t color = image_pixel(image, x, y);
-            array2f_set(array, x, y, get_alpha(color));
+            array2f_set(array, x, y, get_alpha(color) / 255);
         }
     }
 }
@@ -169,7 +169,7 @@ void bounds_from_image(bounds_t* bounds, const image *image) {
     alpha_to_array2f(image, &bounds_source); // TODO: scale bounds_source to bounds
     
     // threshold
-    array2f_filter(&bounds_source, threshold);
+    //array2f_filter(&bounds_source, threshold);
 
     for (int j = 0; j < bounds_source.resolution.height - 1; j++) {
         for (int i = 0; i < bounds_source.resolution.width - 1; i++) {
