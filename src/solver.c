@@ -57,24 +57,15 @@ void set_bnd(const array2f *x, const bounds_t *bounds)
 	// Check dynamic boundaries
 	const size_t w = x->resolution.width;
 	const size_t h = x->resolution.height;
-	array2f tmp = create_array2f(x->resolution);
 	for (size_t j = 0; j < h; j++) {
 		for (size_t i = 0; i < w; i++) {
 			const float dx = array2f_get(&bounds->bx, i, j);
 			const float dy = array2f_get(&bounds->by, i, j);
 			const int dxi = signf(dx);
 			const int dyi = signf(dy);
-			array2f_set(&tmp, i, j, array2f_get(x, i + dxi, j + dyi));
+			array2f_set(x, i, j, array2f_get(x, i + dxi, j + dyi));
 		}
 	}
-
-	// Copy over (could use swap?)
-	for (size_t j = 0; j < h; j++) {
-		for (size_t i = 0; i < w; i++) {
-			array2f_set(x, i, j, array2f_get(&tmp, i, j));
-		}
-	}
-	destroy_array2f(&tmp);
 }
 
 void lin_solve(const array2f *x, const array2f *x0, float a, float c)
