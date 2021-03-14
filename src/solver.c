@@ -122,7 +122,7 @@ void advect(const array2f *d, const array2f *d0, const array2f *u, const array2f
 	}
 }
 
-void project(const array2f *u, const array2f *v, const array2f *p, const array2f *div, const bounds_t *bounds)
+void project(const array2f *u, const array2f *v, const array2f *p, const array2f *divergence, const bounds_t *bounds)
 {
 	const size_t w = u->resolution.width;
 	const size_t h = u->resolution.height;
@@ -130,15 +130,15 @@ void project(const array2f *u, const array2f *v, const array2f *p, const array2f
 	const size_t N = (w + h - 4) / 2; // TODO: Should this be sqrt instead?
 	for (size_t j = 1; j < h - 1; j++) {
 		for (size_t i = 1; i < w - 1; i++) {
-			ARRAY2F_AT(div, i, j) = -0.5f * (
+			ARRAY2F_AT(divergence, i, j) = -0.5f * (
 				array2f_get(u, i + 1, j) - array2f_get(u, i - 1, j) +
 				array2f_get(v, i, j + 1) - array2f_get(v, i, j - 1)) / N;
 			ARRAY2F_AT(p, i, j) = 0;
 		}
 	}
-	set_bnd(0, div, bounds); set_bnd(0, p, bounds);
+	set_bnd(0, divergence, bounds); set_bnd(0, p, bounds);
 
-	lin_solve(p, div, 1, 4);
+	lin_solve(p, divergence, 1, 4);
 	set_bnd(0, p, bounds);
 
 	for (size_t j = 1; j < h - 1; j++) {
