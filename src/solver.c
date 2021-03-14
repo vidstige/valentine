@@ -72,7 +72,7 @@ void set_bnd(int b, const array2f *x, const bounds_t *bounds)
 	destroy_array2f(&tmp);
 }
 
-void lin_solve(int b, const array2f *x, const array2f *x0, float a, float c)
+void lin_solve(const array2f *x, const array2f *x0, float a, float c)
 {
 	const size_t w = x->resolution.width;
 	const size_t h = x->resolution.height;
@@ -93,7 +93,7 @@ void lin_solve(int b, const array2f *x, const array2f *x0, float a, float c)
 void diffuse(int b, const array2f *x, const array2f *x0, const bounds_t *bounds, float diff, float dt )
 {
 	float a = dt * diff * array2f_area(x);
-	lin_solve(b, x, x0, a, 1 + 4 * a);
+	lin_solve(x, x0, a, 1 + 4 * a);
 	set_bnd(b, x, bounds);
 }
 
@@ -140,7 +140,7 @@ void project(const array2f *u, const array2f *v, const array2f *p, const array2f
 	}
 	set_bnd(0, div, bounds); set_bnd(0, p, bounds);
 
-	lin_solve(0, p, div, 1, 4);
+	lin_solve(p, div, 1, 4);
 	set_bnd(0, p, bounds);
 
 	for (size_t j = 1; j < h - 1; j++) {
