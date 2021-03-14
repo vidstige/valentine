@@ -150,10 +150,10 @@ void project(const array2f *u, const array2f *v, const array2f *p, const array2f
 	set_bnd(1, u, bounds); set_bnd(2, v, bounds);
 }
 
-void density_step(array2f *x, array2f *x0, array2f *u, array2f *v, const bounds_t *bounds, float diff, float dt)
+void density_step(array2f *x, array2f *x0, array2f *u, array2f *v, const bounds_t *bounds, float diffusion, float dt)
 {
 	add_source(x, x0, dt);
-	SWAP(x0, x); diffuse(x, x0, diff, dt); set_bnd(0, x, bounds);
+	SWAP(x0, x); diffuse(x, x0, diffusion, dt); set_bnd(0, x, bounds);
 	SWAP(x0, x); advect(x, x0, u, v, dt); set_bnd(0, x, bounds);
 }
 
