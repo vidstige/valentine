@@ -10,6 +10,6 @@ typedef struct {
 } bounds_t;
 
 void density_step(array2f *x, array2f *x0, array2f *u, array2f *v, const bounds_t *bounds, float diff, float dt);
-void velocity_step(array2f *u, array2f *v, array2f *u0, array2f *v0, const bounds_t *bounds, float visc, float dt);
+void velocity_step(array2f *u, array2f *v, array2f *u0, array2f *v0, const bounds_t *bounds, float viscosity, float dt);
 
 #endif

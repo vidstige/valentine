@@ -157,11 +157,11 @@ void density_step(array2f *x, array2f *x0, array2f *u, array2f *v, const bounds_
 	SWAP(x0, x); advect(x, x0, u, v, dt); set_bnd(0, x, bounds);
 }
 
-void velocity_step(array2f *u, array2f *v, array2f *u0, array2f *v0, const bounds_t *bounds, float visc, float dt)
+void velocity_step(array2f *u, array2f *v, array2f *u0, array2f *v0, const bounds_t *bounds, float viscosity, float dt)
 {
 	add_source(u, u0, dt); add_source(v, v0, dt);
-	SWAP(u0, u); diffuse(u, u0, visc, dt); set_bnd(1, u, bounds);
-	SWAP(v0, v); diffuse(v, v0, visc, dt); set_bnd(2, v, bounds);
+	SWAP(u0, u); diffuse(u, u0, viscosity, dt); set_bnd(1, u, bounds);
+	SWAP(v0, v); diffuse(v, v0, viscosity, dt); set_bnd(2, v, bounds);
 	project(u, v, u0, v0, bounds);
 	SWAP(u0, u); SWAP(v0, v);
 	advect(u, u0, u0, v0, dt); set_bnd(1, u, bounds);
