@@ -18,16 +18,6 @@ void add_source(const array2f *array, const array2f *source, float dt )
 	}
 }
 
-float dirty_mirror(int b, int dx, int dy) {
-	if (b == 1 && dx == 0) {
-		return -1.0f;
-	}
-	if (b == 2 && dy == 0) {
-		return -1.0f;
-	}
-	return 1.0f;
-}
-
 void set_neutral_edges(const array2f *x) {
 	const size_t w = x->resolution.width;
 	const size_t h = x->resolution.height;
@@ -41,7 +31,25 @@ void set_neutral_edges(const array2f *x) {
 	}
 }
 
-void set_bnd(int b, const array2f *x, const bounds_t *bounds)
+void mirror_bnd(const array2f *x, const array2f *m, int dx, int dy) {
+	// Always set the edges to closest value
+	set_neutral_edges(x);
+
+	const size_t w = x->resolution.width;
+	const size_t h = x->resolution.height;
+	for (size_t j = 0; j < h; j++) {
+		for (size_t i = 0; i < w; i++) {
+			const float d = array2f_get(m, i, j);
+			const int di = signf(d);
+			// without lerp, this if-statement is needed
+			if (di != 0) {
+				array2f_set(x, i, j, -array2f_get(x, i + dx * di, j + dy * di));
+			}
+		}
+	}
+}
+
+void set_bnd(const array2f *x, const bounds_t *bounds)
 {
 	// Always set the edges to closest value
 	set_neutral_edges(x);
@@ -56,13 +64,10 @@ void set_bnd(int b, const array2f *x, const bounds_t *bounds)
 			const float dy = array2f_get(&bounds->by, i, j);
 			const int dxi = signf(dx);
 			const int dyi = signf(dy);
-			const float m = dirty_mirror(b, dxi, dyi);
-			array2f_set(&tmp, i, j,
-				m * array2f_get(x, i + dxi, j + dyi)
-			);
+			array2f_set(&tmp, i, j, array2f_get(x, i + dxi, j + dyi));
 		}
 	}
-	
+
 	// Copy over (could use swap?)
 	for (size_t j = 0; j < h; j++) {
 		for (size_t i = 0; i < w; i++) {
@@ -137,10 +142,10 @@ void project(const array2f *u, const array2f *v, const array2f *p, const array2f
 			ARRAY2F_AT(p, i, j) = 0;
 		}
 	}
-	set_bnd(0, divergence, bounds); set_bnd(0, p, bounds);
+	set_bnd(divergence, bounds); set_bnd(p, bounds);
 
 	lin_solve(p, divergence, 1, 4);
-	set_bnd(0, p, bounds);
+	set_bnd(p, bounds);
 
 	for (size_t j = 1; j < h - 1; j++) {
 		for (size_t i = 1; i < w - 1; i++) {
@@ -148,24 +153,28 @@ void project(const array2f *u, const array2f *v, const array2f *p, const array2f
 			ARRAY2F_AT(v, i, j) -= 0.5f * (h-2) * (array2f_get(p, i, j + 1) - array2f_get(p, i, j - 1));
 		}
 	}
-	set_bnd(1, u, bounds); set_bnd(2, v, bounds);
+	//set_bnd(1, u, bounds); set_bnd(2, v, bounds);
+	mirror_bnd(u, &bounds->bx, 1, 0); mirror_bnd(v, &bounds->by, 0, 1);
 }
 
 void density_step(array2f *x, array2f *x0, array2f *u, array2f *v, const bounds_t *bounds, float diffusion, float dt)
 {
 	add_source(x, x0, dt);
-	SWAP(x0, x); diffuse(x, x0, diffusion, dt); set_bnd(0, x, bounds);
-	SWAP(x0, x); advect(x, x0, u, v, dt); set_bnd(0, x, bounds);
+	SWAP(x0, x); diffuse(x, x0, diffusion, dt); set_bnd(x, bounds);
+	SWAP(x0, x); advect(x, x0, u, v, dt); set_bnd(x, bounds);
 }
 
 void velocity_step(array2f *u, array2f *v, array2f *u0, array2f *v0, const bounds_t *bounds, float viscosity, float dt)
 {
 	add_source(u, u0, dt); add_source(v, v0, dt);
-	SWAP(u0, u); diffuse(u, u0, viscosity, dt); set_bnd(1, u, bounds);
-	SWAP(v0, v); diffuse(v, v0, viscosity, dt); set_bnd(2, v, bounds);
+	SWAP(u0, u); diffuse(u, u0, viscosity, dt); mirror_bnd(u, &bounds->bx, 1, 0);
+
+	SWAP(v0, v); diffuse(v, v0, viscosity, dt); mirror_bnd(v, &bounds->by, 0, 1);
+
 	project(u, v, u0, v0, bounds);
 	SWAP(u0, u); SWAP(v0, v);
-	advect(u, u0, u0, v0, dt); set_bnd(1, u, bounds);
-	advect(v, v0, u0, v0, dt); set_bnd(2, v, bounds);
+	advect(u, u0, u0, v0, dt); mirror_bnd(u, &bounds->bx, 1, 0);
+	advect(v, v0, u0, v0, dt); mirror_bnd(v, &bounds->by, 0, 1);
+
 	project(u, v, u0, v0, bounds);
 }
