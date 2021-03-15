@@ -141,7 +141,7 @@ void center_image(image* im, resolution_t resolution) {
 int main() {
     srand(1337);
 
-    const resolution_t resolution = {506/2 + 2, 253/2 + 2};
+    const resolution_t resolution = {506/3 + 2, 253/3 + 2};
 
     array2f u = create_array2f(resolution); array2f_fill(u, 0.f);
     array2f v = create_array2f(resolution); array2f_fill(v, 0.f);
