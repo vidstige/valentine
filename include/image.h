@@ -27,5 +27,6 @@ size_t image_height(const image *image);
 color_t image_pixel(const image *image, size_t x, size_t y);
 
 void clear(const image *image, color_t color);
+void image_scale(const image *target, const image *source);
 
 #endif

@@ -56,17 +56,6 @@ void blit(const image *target, const image *source, position_t position) {
     }
 }
 
-void image_scale(const image *target, const image *source) {
-    for (size_t ty = 0; ty < image_height(target); ty++) {
-        for (size_t tx = 0; tx < image_width(target); tx++) {
-            const size_t sx = tx * image_width(source) / image_width(target);
-            const size_t sy = ty * image_height(source) / image_height(target);
-            const color_t color = source->buffer[sx + sy * source->stride];
-            target->buffer[tx + ty * target->stride] = color;
-        }
-    }
-}
-
 position_t center(resolution_t outer, resolution_t inner) {
     position_t p;
     p.x = (outer.width - inner.width) / 2;
