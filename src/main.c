@@ -113,7 +113,7 @@ float randf() {
 }
 
 void flow(array2f a, size_t y, float mean, float amplitude) {
-    for (size_t x = 0; x < a.resolution.width; x++) {
+    for (size_t x = 2; x < a.resolution.width - 2; x++) {
         a.buffer[a.stride * y + x] = mean + amplitude * (randf() - 0.5f);
     }
 }
@@ -210,7 +210,7 @@ int main() {
     image screen = create_image(506, 253);
     image im = load_rgba("heart2.bgra", 64, 64);
     
-    array2f_rand(array2f_pad(&dens, 2, 2), 1);
+    //array2f_rand(array2f_pad(&dens, 2, 2), 1);
 
     // Create bounds
     bounds_t bounds;
@@ -235,13 +235,13 @@ int main() {
     const image dens_im = create_image(resolution.width - 2, resolution.height - 2);
     for (size_t frame = 0; frame < 1000; frame++) {
         // Inject matter
-        //for (size_t x = 1; x < dens.resolution.width - 1; x++) {
-        //    array2f_set(&dens, x, dens.resolution.height - 3, 0.5f);
-        //}
+        for (size_t x = 3; x < dens.resolution.width - 3; x++) {
+            array2f_set(&dens, x, dens.resolution.height - 3, 0.5f);
+        }
         
         // Create upwards swirly flow
-        flow(u, resolution.height - 3, 0, 20);
-        flow(v, resolution.height - 3, resolution.height * -0.03, 3);
+        flow(u, resolution.height - 5, 0, 20);
+        flow(v, resolution.height - 5, resolution.height * -0.03, 3);
 
         clear(&screen, 0xff222222);
         //get_from_UI ( dens_prev, u_prev, v_prev );
