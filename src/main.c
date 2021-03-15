@@ -11,9 +11,6 @@
 #include "image_io.h"
 #include "solver.h"
 
-#ifndef M_PI
-#    define M_PI 3.14159265358979323846
-#endif
 
 void convolution(const array2f *source, const array2f *kernel, const array2f *target) {
     assert(source->resolution.width == target->resolution.width);
@@ -159,17 +156,9 @@ void box_bounds(const bounds_t* bounds) {
 	}
 }
 
-float threshold(float value) {
-    if (value > 128) return 1.0f;
-    return 0.0f;
-}
-
 void bounds_from_image(bounds_t* bounds, const image *image) {
     array2f bounds_source = create_array2f(image->resolution);
     alpha_to_array2f(image, &bounds_source); // TODO: scale bounds_source to bounds
-    
-    // threshold
-    //array2f_filter(&bounds_source, threshold);
 
     for (int j = 0; j < bounds_source.resolution.height - 1; j++) {
         for (int i = 0; i < bounds_source.resolution.width - 1; i++) {
