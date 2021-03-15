@@ -1,3 +1,5 @@
+#include <math.h>
+
 #include "array2f.h"
 #include "resolution.h"
 
@@ -46,4 +48,30 @@ array2f array2f_pad(const array2f *array, size_t pad_x, size_t pad_y) {
 
 size_t array2f_area(const array2f *array) {
     return resolution_area(array->resolution);
+}
+
+float array2f_high(const array2f *array) {
+    float tmp = -INFINITY;
+    size_t index = 0;
+    for (int y = 0; y < array->resolution.height; y++) {
+        for (int x = 0; x < array->resolution.width; x++) {
+            if (array->buffer[index] > tmp) tmp = array->buffer[index];
+            index++;
+        }
+        index += (array->stride - array->resolution.width);
+    }
+    return tmp;
+}
+
+float array2f_low(const array2f *array) {
+    float tmp = INFINITY;
+    size_t index = 0;
+    for (int y = 0; y < array->resolution.height; y++) {
+        for (int x = 0; x < array->resolution.width; x++) {
+            if (array->buffer[index] < tmp) tmp = array->buffer[index];
+            index++;
+        }
+        index += (array->stride - array->resolution.width);
+    }
+    return tmp;
 }

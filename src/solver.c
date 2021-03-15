@@ -1,16 +1,8 @@
+#include "xf.h"
 #include "solver.h"
 #include "array2f.h"
 
 #define SWAP(x0,x) {array2f * tmp=x0;x0=x;x=tmp;}
-
-// returns -1, -1 depending on the sign of x. For x=+0 or -0 return 0
-int signf(float x) {
-	return (x > 0) - (x < 0);
-}
-
-static float lerpf(float a, float b, float t) {
-	return a * (1 - t) + b * t;
-}
 
 void add_source(const array2f *array, const array2f *source, float dt )
 {

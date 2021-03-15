@@ -10,7 +10,7 @@
 #include "image.h"
 #include "image_io.h"
 #include "solver.h"
-
+#include "xf.h"
 
 void convolution(const array2f *source, const array2f *kernel, const array2f *target) {
     assert(source->resolution.width == target->resolution.width);
@@ -30,28 +30,6 @@ void convolution(const array2f *source, const array2f *kernel, const array2f *ta
             array2f_set(target, x, y, tmp);
         }
     }
-}
-
-float highf(float* array, size_t n) {
-    float tmp = -INFINITY;
-    for (size_t i = 0; i < n; i++) {
-        if (array[i] > tmp) tmp = array[i];
-    }
-    return tmp;
-}
-
-float lowf(float* array, size_t n) {
-    float tmp = INFINITY;
-    for (size_t i = 0; i < n; i++) {
-        if (array[i] < tmp) tmp = array[i];
-    }
-    return tmp;
-}
-
-float clampf(float x, float lo, float hi) {
-    if (x < lo) return lo;
-    if (x > hi) return hi;
-    return x;
 }
 
 void draw_dens(const image *image, array2f dens, const colormap_t *colormap) {
