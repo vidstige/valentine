@@ -3,8 +3,13 @@
 
 #define SWAP(x0,x) {array2f * tmp=x0;x0=x;x=tmp;}
 
+// returns -1, -1 depending on the sign of x. For x=+0 or -0 return 0
 int signf(float x) {
 	return (x > 0) - (x < 0);
+}
+
+static float lerpf(float a, float b, float t) {
+	return a * (1 - t) + b * t;
 }
 
 void add_source(const array2f *array, const array2f *source, float dt )
@@ -41,10 +46,8 @@ void mirror_bnd(const array2f *x, const array2f *m, int dx, int dy) {
 		for (size_t i = 0; i < w; i++) {
 			const float d = array2f_get(m, i, j);
 			const int di = signf(d);
-			// without lerp, this if-statement is needed
-			if (di != 0) {
-				array2f_set(x, i, j, -array2f_get(x, i + dx * di, j + dy * di));
-			}
+			array2f_set(x, i, j,
+				lerpf(array2f_get(x, i, j), -array2f_get(x, i + dx * di, j + dy * di), abs(d)));
 		}
 	}
 }
@@ -144,7 +147,6 @@ void project(const array2f *u, const array2f *v, const array2f *p, const array2f
 			ARRAY2F_AT(v, i, j) -= 0.5f * (h-2) * (array2f_get(p, i, j + 1) - array2f_get(p, i, j - 1));
 		}
 	}
-	//set_bnd(1, u, bounds); set_bnd(2, v, bounds);
 	mirror_bnd(u, &bounds->bx, 1, 0); mirror_bnd(v, &bounds->by, 0, 1);
 }
 
