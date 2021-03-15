@@ -25,5 +25,6 @@ float array2f_get(const array2f *array, size_t x, size_t y);
 void array2f_set(const array2f *array, size_t x, size_t y, float value);
 array2f array2f_pad(const array2f *array, size_t pad_x, size_t pad_y);
 size_t array2f_area(const array2f *array);
+void array2f_fill(array2f a, float value);
 
 #endif

@@ -82,16 +82,6 @@ void flow(array2f a, size_t y, float mean, float amplitude) {
     }
 }
 
-void array2f_fill(array2f a, float value) {
-    size_t c = 0;
-    for (size_t y = 0; y < a.resolution.height; y++) {
-        for (size_t x = 0; x < a.resolution.width; x++) {
-            a.buffer[c++] = value;
-        }
-        c += (a.stride - a.resolution.width);
-    }
-}
-
 void array2f_rand(array2f a, float amplitude) {
     size_t c = 0;
     for (size_t y = 0; y < a.resolution.height; y++) {
@@ -151,7 +141,7 @@ void center_image(image* im, resolution_t resolution) {
 int main() {
     srand(1337);
 
-    const resolution_t resolution = {506/4 + 2, 253/4 + 2};
+    const resolution_t resolution = {506/2 + 2, 253/2 + 2};
 
     array2f u = create_array2f(resolution); array2f_fill(u, 0.f);
     array2f v = create_array2f(resolution); array2f_fill(v, 0.f);

@@ -75,3 +75,13 @@ float array2f_low(const array2f *array) {
     }
     return tmp;
 }
+
+void array2f_fill(array2f a, float value) {
+    size_t c = 0;
+    for (size_t y = 0; y < a.resolution.height; y++) {
+        for (size_t x = 0; x < a.resolution.width; x++) {
+            a.buffer[c++] = value;
+        }
+        c += (a.stride - a.resolution.width);
+    }
+}
