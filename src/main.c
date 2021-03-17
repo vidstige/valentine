@@ -150,6 +150,7 @@ int main() {
     
     array2f dens = create_array2f(resolution); array2f_fill(dens, 0.f);
     array2f dens_prev = create_array2f(resolution); array2f_fill(dens_prev, 0.f);
+    array2f energy = create_array2f(resolution); array2f_fill(energy, 0.f);
 
     const float visc = 0.001, diffusion = 0.0;
     const float dt = 0.01;
@@ -193,7 +194,11 @@ int main() {
         //get_from_UI ( dens_prev, u_prev, v_prev );
         velocity_step(&u, &v, &u_prev, &v_prev, &bounds, visc, dt);
         density_step(&dens, &dens_prev, &u, &v, &bounds, diffusion, dt);
+
         draw_array2f(&dens_im, array2f_pad(&dens, 1, 1), &colormap);
+        
+        //array2f_norm2(&u, &v, &energy);
+        //draw_array2f(&dens_im, array2f_pad(&energy, 1, 1), &colormap);
         image_scale(&screen, &dens_im);
         //blit(&screen, &im, center(screen.resolution, im.resolution));
         fwrite(screen.buffer, sizeof(uint32_t), image_pixel_count(&screen), stdout);
@@ -206,6 +211,8 @@ int main() {
 
     destroy_image(&im);
     destroy_image(&screen);
+
+    destroy_array2f(&energy);
 
     destroy_array2f(&u);
     destroy_array2f(&v);
