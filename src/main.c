@@ -32,7 +32,7 @@ void convolution(const array2f *source, const array2f *kernel, const array2f *ta
     }
 }
 
-void draw_dens(const image *image, array2f dens, const colormap_t *colormap) {
+void draw_array2f(const image *image, array2f dens, const colormap_t *colormap) {
     assert(dens.resolution.width <= image_width(image));
     assert(dens.resolution.height <= image_height(image));
     //float hi = highf(dens, size), lo = lowf(dens, size);
@@ -193,7 +193,7 @@ int main() {
         //get_from_UI ( dens_prev, u_prev, v_prev );
         velocity_step(&u, &v, &u_prev, &v_prev, &bounds, visc, dt);
         density_step(&dens, &dens_prev, &u, &v, &bounds, diffusion, dt);
-        draw_dens(&dens_im, array2f_pad(&dens, 1, 1), &colormap);
+        draw_array2f(&dens_im, array2f_pad(&dens, 1, 1), &colormap);
         image_scale(&screen, &dens_im);
         //blit(&screen, &im, center(screen.resolution, im.resolution));
         fwrite(screen.buffer, sizeof(uint32_t), image_pixel_count(&screen), stdout);
