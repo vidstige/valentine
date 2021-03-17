@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <math.h>
 
 #include "array2f.h"
@@ -83,5 +84,22 @@ void array2f_fill(array2f a, float value) {
             a.buffer[c++] = value;
         }
         c += (a.stride - a.resolution.width);
+    }
+}
+
+void array2f_norm2(const array2f *u, const array2f *v, array2f *destination) {
+    assert(resolution_equal(u->resolution, destination->resolution));
+    assert(resolution_equal(v->resolution, destination->resolution));
+    size_t di = 0, ui = 0, vi = 0;
+    for (int y = 0; y < destination->resolution.height; y++) {
+        for (int x = 0; x < destination->resolution.width; x++) {
+            float uu = u->buffer[ui];
+            float vv = v->buffer[vi];
+            destination->buffer[di] = uu * uu + vv * vv;
+            di++; ui++; vi++;
+        }
+        di += (destination->stride - destination->resolution.width);
+        ui += (u->stride - u->resolution.width);
+        vi += (v->stride - v->resolution.width);
     }
 }

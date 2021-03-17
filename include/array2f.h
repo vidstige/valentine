@@ -27,4 +27,7 @@ array2f array2f_pad(const array2f *array, size_t pad_x, size_t pad_y);
 size_t array2f_area(const array2f *array);
 void array2f_fill(array2f a, float value);
 
+// linear algebra
+void array2f_norm2(const array2f *u, const array2f *v, array2f *destination);
+
 #endif
