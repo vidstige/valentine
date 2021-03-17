@@ -31,3 +31,4 @@ void array2f_fill(array2f a, float value);
 void array2f_norm2(const array2f *u, const array2f *v, array2f *destination);
 
 #endif
+

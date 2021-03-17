@@ -1,3 +1,5 @@
+#include <math.h>
+
 #include "xf.h"
 #include "solver.h"
 #include "array2f.h"
@@ -39,7 +41,7 @@ void mirror_bnd(const array2f *x, const array2f *m, int dx, int dy) {
 			const float d = array2f_get(m, i, j);
 			const int di = signf(d);
 			array2f_set(x, i, j,
-				lerpf(array2f_get(x, i, j), -array2f_get(x, i + dx * di, j + dy * di), abs(d)));
+				lerpf(array2f_get(x, i, j), -array2f_get(x, i + dx * di, j + dy * di), fabs(d)));
 		}
 	}
 }

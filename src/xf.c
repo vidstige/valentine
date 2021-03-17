@@ -14,3 +14,4 @@ float clampf(float x, float lo, float hi) {
     if (x > hi) return hi;
     return x;
 }
+

@@ -32,3 +32,4 @@ color_t colormap_get(const colormap_t *colormap, float t) {
     t /= size;
     return lerp_color(colormap->colors[i], colormap->colors[i + 1], t);
 }
+

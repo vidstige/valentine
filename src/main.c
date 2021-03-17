@@ -221,3 +221,4 @@ int main() {
     destroy_array2f(&dens);
     destroy_array2f(&dens_prev);
 }
+

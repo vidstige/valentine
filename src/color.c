@@ -68,3 +68,4 @@ color_t blend_color(color_t c1, color_t c2) {
         (c1_b * ia + c2_b * a) >> 8
     );
 }
+

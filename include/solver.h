@@ -13,3 +13,4 @@ void density_step(array2f *x, array2f *x0, array2f *u, array2f *v, const bounds_
 void velocity_step(array2f *u, array2f *v, array2f *u0, array2f *v0, const bounds_t *bounds, float viscosity, float dt);
 
 #endif
+

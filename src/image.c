@@ -47,3 +47,4 @@ void image_scale(const image *target, const image *source) {
         }
     }
 }
+

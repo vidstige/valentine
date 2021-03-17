@@ -14,3 +14,4 @@ void destroy_colormap(const colormap_t *colormap);
 color_t colormap_get(const colormap_t *colormap, float t);
 
 #endif
+

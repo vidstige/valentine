@@ -15,3 +15,4 @@ color_t lerp_color(color_t c1, color_t c2, float t);
 color_t blend_color(color_t c1, color_t c2);
 
 #endif
+

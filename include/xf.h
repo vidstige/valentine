@@ -14,3 +14,4 @@ float lerpf(float a, float b, float t);
 float clampf(float x, float lo, float hi);
 
 #endif
+

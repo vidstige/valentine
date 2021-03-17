@@ -17,3 +17,4 @@ image load_rgba(const char* filename, size_t width, size_t height) {
     fclose(fp);
     return image;
 }
+
