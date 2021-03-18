@@ -1,3 +1,5 @@
 language: python
 script: make
-compiler: gcc
+compiler:
+  - clang
+  - gcc
