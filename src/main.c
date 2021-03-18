@@ -114,19 +114,19 @@ void box_bounds(const bounds_t* bounds) {
 }
 
 void bounds_from_image(bounds_t* bounds, const image *image) {
-    array2f bounds_source = create_array2f(image->resolution);
-    alpha_to_array2f(image, &bounds_source); // TODO: scale bounds_source to bounds
+    array2f mask = create_array2f(image->resolution);
+    alpha_to_array2f(image, &mask); // TODO: scale bounds_source to bounds
 
-    for (int j = 0; j < bounds_source.resolution.height - 1; j++) {
-        for (int i = 0; i < bounds_source.resolution.width - 1; i++) {
-            const float dx = array2f_get(&bounds_source, i + 1, j) - array2f_get(&bounds_source, i, j);
-            const float dy = array2f_get(&bounds_source, i, j + 1) - array2f_get(&bounds_source, i, j);
+    for (int j = 0; j < mask.resolution.height - 1; j++) {
+        for (int i = 0; i < mask.resolution.width - 1; i++) {
+            const float dx = array2f_get(&mask, i + 1, j) - array2f_get(&mask, i, j);
+            const float dy = array2f_get(&mask, i, j + 1) - array2f_get(&mask, i, j);
             array2f_set(&(bounds->bx), i, j, dx);
             array2f_set(&(bounds->by), i, j, dy);
         }
     }
 
-    destroy_array2f(&bounds_source);
+    destroy_array2f(&mask);
 }
 
 // Create a new image with the given resolution and centers the old one inside
