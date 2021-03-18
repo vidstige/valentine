@@ -163,7 +163,6 @@ int main() {
     center_image(&im, resolution);
     array2f mask = create_array2f(resolution);
     alpha_to_array2f(&im, &mask);
-    bounds_from_mask(&bounds, &mask);
     //box_bounds(&bounds);
 
     // black -> white
@@ -186,8 +185,8 @@ int main() {
         // Create upwards swirly flow
         flow(u, resolution.height - 5, 0, 20);
         flow(v, resolution.height - 5, resolution.height * -0.03, 3);
-
-        clear(&screen, 0xff222222);
+     
+        bounds_from_mask(&bounds, &mask);
         //get_from_UI ( dens_prev, u_prev, v_prev );
         velocity_step(&u, &v, &u_prev, &v_prev, &bounds, visc, dt);
         density_step(&dens, &dens_prev, &u, &v, &bounds, diffusion, dt);
@@ -196,6 +195,7 @@ int main() {
         
         //array2f_norm2(&u, &v, &energy);
         //draw_array2f(&dens_im, array2f_pad(&energy, 1, 1), &colormap);
+        //clear(&screen, 0xff222222);
         image_scale(&screen, &dens_im);
         //blit(&screen, &im, center(screen.resolution, im.resolution));
         fwrite(screen.buffer, sizeof(uint32_t), image_pixel_count(&screen), stdout);
@@ -219,4 +219,3 @@ int main() {
     destroy_array2f(&dens);
     destroy_array2f(&dens_prev);
 }
-
