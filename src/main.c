@@ -133,6 +133,17 @@ void center_image(image* im, resolution_t resolution) {
     *im = tmp;
 }
 
+void update_mask(array2f *energy, array2f *mask, float dt) {
+    const resolution_t resolution = resolution_same(energy->resolution, mask->resolution);
+    for (size_t y = 0; y < resolution.height; y++) {
+        for (size_t x = 0; x < resolution.width; x++) {
+            const float e = array2f_get(energy, x, y);
+            const float m = array2f_get(mask, x, y);
+            array2f_set(mask, x, y, fmaxf(m - e*0.0001, 0.f));
+        }
+    }
+}
+
 int main() {
     srand(1337);
 
@@ -187,13 +198,15 @@ int main() {
         flow(v, resolution.height - 5, resolution.height * -0.03, 3);
      
         bounds_from_mask(&bounds, &mask);
+        //array2f_norm2(&u, &v, &energy);
+        //update_mask(&energy, &mask, dt);
+
         //get_from_UI ( dens_prev, u_prev, v_prev );
         velocity_step(&u, &v, &u_prev, &v_prev, &bounds, visc, dt);
         density_step(&dens, &dens_prev, &u, &v, &bounds, diffusion, dt);
 
         draw_array2f(&dens_im, array2f_pad(&dens, 1, 1), &colormap);
         
-        //array2f_norm2(&u, &v, &energy);
         //draw_array2f(&dens_im, array2f_pad(&energy, 1, 1), &colormap);
         //clear(&screen, 0xff222222);
         image_scale(&screen, &dens_im);
