@@ -113,20 +113,15 @@ void box_bounds(const bounds_t* bounds) {
 	}
 }
 
-void bounds_from_image(bounds_t* bounds, const image *image) {
-    array2f mask = create_array2f(image->resolution);
-    alpha_to_array2f(image, &mask); // TODO: scale bounds_source to bounds
-
-    for (int j = 0; j < mask.resolution.height - 1; j++) {
-        for (int i = 0; i < mask.resolution.width - 1; i++) {
-            const float dx = array2f_get(&mask, i + 1, j) - array2f_get(&mask, i, j);
-            const float dy = array2f_get(&mask, i, j + 1) - array2f_get(&mask, i, j);
+void bounds_from_mask(bounds_t* bounds, const array2f *mask) {
+    for (int j = 0; j < mask->resolution.height - 1; j++) {
+        for (int i = 0; i < mask->resolution.width - 1; i++) {
+            const float dx = array2f_get(mask, i + 1, j) - array2f_get(mask, i, j);
+            const float dy = array2f_get(mask, i, j + 1) - array2f_get(mask, i, j);
             array2f_set(&(bounds->bx), i, j, dx);
             array2f_set(&(bounds->by), i, j, dy);
         }
     }
-
-    destroy_array2f(&mask);
 }
 
 // Create a new image with the given resolution and centers the old one inside
@@ -166,7 +161,9 @@ int main() {
     array2f_fill(bounds.bx, 0.f);
     array2f_fill(bounds.by, 0.f);
     center_image(&im, resolution);
-    bounds_from_image(&bounds, &im);
+    array2f mask = create_array2f(resolution);
+    alpha_to_array2f(&im, &mask);
+    bounds_from_mask(&bounds, &mask);
     //box_bounds(&bounds);
 
     // black -> white
@@ -208,6 +205,7 @@ int main() {
 
     destroy_array2f(&bounds.bx);
     destroy_array2f(&bounds.by);
+    destroy_array2f(&mask);
 
     destroy_image(&im);
     destroy_image(&screen);
