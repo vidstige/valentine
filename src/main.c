@@ -158,23 +158,49 @@ void array2f_scale_add(const array2f *array, const array2f *source, float k)
 	}
 }
 
+typedef struct {
+    array2f u, v;
+    array2f u_prev, v_prev;
+    array2f dens, dens_prev;
+    float viscosity;
+    float diffusion;
+    array2f mask;
+    array2f wear;
+} fluid_t;
+
+fluid_t create_fluid(resolution_t resolution, float viscosity, float diffusion) {
+    fluid_t fluid;
+    fluid.u = create_array2f(resolution); array2f_fill(fluid.u, 0.f);
+    fluid.v = create_array2f(resolution); array2f_fill(fluid.v, 0.f);
+    fluid.u_prev = create_array2f(resolution); array2f_fill(fluid.u_prev, 0.f);
+    fluid.v_prev = create_array2f(resolution); array2f_fill(fluid.v_prev, 0.f);
+    fluid.viscosity = viscosity;
+    fluid.diffusion = diffusion;
+    fluid.dens = create_array2f(resolution); array2f_fill(fluid.dens, 0.f);
+    fluid.dens_prev = create_array2f(resolution); array2f_fill(fluid.dens_prev, 0.f);
+    fluid.mask = create_array2f(resolution); array2f_fill(fluid.mask, 0.f);
+    fluid.wear = create_array2f(resolution); array2f_fill(fluid.wear, 0.f);
+    return fluid;
+}
+
+void destroy_fluid(const fluid_t *fluid) {
+    destroy_array2f(&fluid->u); destroy_array2f(&fluid->v);
+    destroy_array2f(&fluid->u_prev); destroy_array2f(&fluid->v_prev);
+    destroy_array2f(&fluid->dens);
+    destroy_array2f(&fluid->dens_prev);
+    destroy_array2f(&fluid->mask);
+    destroy_array2f(&fluid->wear);
+}
+
 int main() {
     srand(1337);
 
     const resolution_t resolution = {506/3 + 2, 253/3 + 2};
+    const float viscosity = 0.001, diffusion = 0.0;
 
-    array2f u = create_array2f(resolution); array2f_fill(u, 0.f);
-    array2f v = create_array2f(resolution); array2f_fill(v, 0.f);
-    array2f u_prev = create_array2f(resolution); array2f_fill(u_prev, 0.f);
-    array2f v_prev = create_array2f(resolution); array2f_fill(v_prev, 0.f);
-    
-    array2f dens = create_array2f(resolution); array2f_fill(dens, 0.f);
-    array2f dens_prev = create_array2f(resolution); array2f_fill(dens_prev, 0.f);
+    fluid_t fluid = create_fluid(resolution, viscosity, diffusion);
     array2f energy = create_array2f(resolution); array2f_fill(energy, 0.f);
-    array2f wear = create_array2f(resolution); array2f_fill(wear, 0.f);
 
-    const float visc = 0.001, diffusion = 0.0;
-    const float dt = 0.01;
     image screen = create_image(506, 253);
     image im = load_rgba("heart2.bgra", 64, 64);
     
@@ -199,8 +225,10 @@ int main() {
         color_parse("#7303c0"),
         color_parse("#ec38bc"),
         color_parse("#fdeff9"));
-    array2f_scale_add(&dens, &mask, 0.2);
-        
+    array2f_scale_add(&fluid.dens, &mask, 0.2);
+
+    const float dt = 0.01;
+
     //image_scale
     const image dens_im = create_image(resolution.width - 2, resolution.height - 2);
     for (size_t frame = 0; frame < 1000; frame++) {
@@ -210,19 +238,19 @@ int main() {
         }*/
         
         // Create upwards swirly flow
-        flow(u, resolution.height - 5, 0, 20);
-        flow(v, resolution.height - 5, resolution.height * -0.03, 3);
+        flow(fluid.u, resolution.height - 5, 0, 20);
+        flow(fluid.v, resolution.height - 5, resolution.height * -0.03, 3);
      
         bounds_from_mask(&bounds, &mask);
-        array2f_norm2(&u, &v, &energy); // compute energy everywhere
-        array2f_scale_add(&wear, &energy, 100*dt);
-        update_mask(&wear, &mask, dt);
+        array2f_norm2(&fluid.u, &fluid.v, &energy); // compute energy everywhere
+        array2f_scale_add(&fluid.wear, &energy, 100*dt);
+        update_mask(&fluid.wear, &mask, dt);
 
         //get_from_UI ( dens_prev, u_prev, v_prev );
-        velocity_step(&u, &v, &u_prev, &v_prev, &bounds, visc, dt);
-        density_step(&dens, &dens_prev, &u, &v, &bounds, diffusion, dt);
+        velocity_step(&fluid.u, &fluid.v, &fluid.u_prev, &fluid.v_prev, &bounds, fluid.viscosity, dt);
+        density_step(&fluid.dens, &fluid.dens_prev, &fluid.u, &fluid.v, &bounds, diffusion, dt);
 
-        draw_array2f(&dens_im, array2f_pad(&dens, 1, 1), &colormap);
+        draw_array2f(&dens_im, array2f_pad(&fluid.dens, 1, 1), &colormap);
         
         //draw_array2f(&dens_im, array2f_pad(&energy, 1, 1), &colormap);
         //clear(&screen, 0xff222222);
@@ -240,13 +268,7 @@ int main() {
     destroy_image(&im);
     destroy_image(&screen);
 
-    destroy_array2f(&wear);
     destroy_array2f(&energy);
 
-    destroy_array2f(&u);
-    destroy_array2f(&v);
-    destroy_array2f(&u_prev);
-    destroy_array2f(&v_prev);
-    destroy_array2f(&dens);
-    destroy_array2f(&dens_prev);
+    destroy_fluid(&fluid);
 }
