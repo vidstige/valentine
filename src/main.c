@@ -199,14 +199,15 @@ int main() {
         color_parse("#7303c0"),
         color_parse("#ec38bc"),
         color_parse("#fdeff9"));
+    array2f_scale_add(&dens, &mask, 0.2);
         
     //image_scale
     const image dens_im = create_image(resolution.width - 2, resolution.height - 2);
     for (size_t frame = 0; frame < 1000; frame++) {
         // Inject matter
-        for (size_t x = 3; x < dens.resolution.width - 3; x++) {
+        /*for (size_t x = 3; x < dens.resolution.width - 3; x++) {
             array2f_set(&dens, x, dens.resolution.height - 3, 0.5f);
-        }
+        }*/
         
         // Create upwards swirly flow
         flow(u, resolution.height - 5, 0, 20);
