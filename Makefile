@@ -7,7 +7,7 @@ SRCS    := $(wildcard $(SRC)/*.c)
 OBJS    := $(patsubst $(SRC)/%.c,$(OBJ)/%.o,$(SRCS))
 BINARY  := smoked-heart
 CFLAGS  := -I$(INCLUDE) -Wall -Werror -pedantic
-LDLIBS  :=
+LDLIBS  := -lm
 
 .PHONY: all run clean
 
@@ -28,6 +28,9 @@ run: $(BINARY)
 test: $(BINARY) expected
 	./$< > actual
 	diff expected actual
+
+%.gif: $(BINARY)
+	./$< | ./gif.sh $@
 
 clean:
 	rm -r $(OBJ) $(BINARY)
