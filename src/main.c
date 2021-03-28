@@ -35,8 +35,8 @@ void convolution(const array2f *source, const array2f *kernel, const array2f *ta
 void draw_array2f(const image *image, array2f dens, const colormap_t *colormap) {
     assert(dens.resolution.width <= image_width(image));
     assert(dens.resolution.height <= image_height(image));
-    //float hi = highf(dens, size), lo = lowf(dens, size);
-    float hi = 1, lo = 0;
+    float hi = array2f_high(&dens), lo = array2f_low(&dens);
+    //float hi = 1, lo = 0;
     for (size_t y = 0; y < dens.resolution.height; y++) {
         for (size_t x = 0; x < dens.resolution.width; x++) {
             float d = dens.buffer[x + y * dens.stride];
@@ -195,7 +195,7 @@ void destroy_fluid(const fluid_t *fluid) {
 int main() {
     srand(1337);
 
-    const resolution_t resolution = {506/3 + 2, 253/3 + 2};
+    const resolution_t resolution = {506/2 + 2, 253/2 + 2};
     const float viscosity = 0.001, diffusion = 0.0;
 
     fluid_t fluid = create_fluid(resolution, viscosity, diffusion);
@@ -231,7 +231,7 @@ int main() {
 
     //image_scale
     const image dens_im = create_image(resolution.width - 2, resolution.height - 2);
-    for (size_t frame = 0; frame < 1000; frame++) {
+    for (size_t frame = 0; frame < 500; frame++) {
         // Inject matter
         /*for (size_t x = 3; x < dens.resolution.width - 3; x++) {
             array2f_set(&dens, x, dens.resolution.height - 3, 0.5f);
@@ -243,7 +243,7 @@ int main() {
      
         bounds_from_mask(&bounds, &mask);
         array2f_norm2(&fluid.u, &fluid.v, &energy); // compute energy everywhere
-        array2f_scale_add(&fluid.wear, &energy, 100*dt);
+        array2f_scale_add(&fluid.wear, &energy, 50*dt);
         update_mask(&fluid.wear, &mask, dt);
 
         //get_from_UI ( dens_prev, u_prev, v_prev );
