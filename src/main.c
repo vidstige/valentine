@@ -133,15 +133,29 @@ void center_image(image* im, resolution_t resolution) {
     *im = tmp;
 }
 
-void update_mask(array2f *energy, array2f *mask, float dt) {
-    const resolution_t resolution = resolution_same(energy->resolution, mask->resolution);
+void update_mask(array2f *wear, array2f *mask, float dt) {
+    const resolution_t resolution = resolution_same(wear->resolution, mask->resolution);
     for (size_t y = 0; y < resolution.height; y++) {
         for (size_t x = 0; x < resolution.width; x++) {
-            const float e = array2f_get(energy, x, y);
+            const float w = array2f_get(wear, x, y);
             const float m = array2f_get(mask, x, y);
-            array2f_set(mask, x, y, fmaxf(m - e*0.0001, 0.f));
+            if (w > 1 && m > 0.f) {
+                array2f_set(mask, x, y, 0.f);
+            }
         }
     }
+}
+
+void array2f_scale_add(const array2f *array, const array2f *source, float k)
+{
+    const resolution_t resolution = resolution_same(array->resolution, source->resolution);
+	for (size_t y = 0; y < resolution.height; y++) {
+		for (size_t x = 0; x < resolution.width; x++) {
+			array2f_set(
+				array, x, y,
+				array2f_get(array, x, y) + array2f_get(source, x, y) * k);
+		}
+	}
 }
 
 int main() {
@@ -157,6 +171,7 @@ int main() {
     array2f dens = create_array2f(resolution); array2f_fill(dens, 0.f);
     array2f dens_prev = create_array2f(resolution); array2f_fill(dens_prev, 0.f);
     array2f energy = create_array2f(resolution); array2f_fill(energy, 0.f);
+    array2f wear = create_array2f(resolution); array2f_fill(wear, 0.f);
 
     const float visc = 0.001, diffusion = 0.0;
     const float dt = 0.01;
@@ -198,8 +213,9 @@ int main() {
         flow(v, resolution.height - 5, resolution.height * -0.03, 3);
      
         bounds_from_mask(&bounds, &mask);
-        //array2f_norm2(&u, &v, &energy);
-        //update_mask(&energy, &mask, dt);
+        array2f_norm2(&u, &v, &energy); // compute energy everywhere
+        array2f_scale_add(&wear, &energy, 100*dt);
+        update_mask(&wear, &mask, dt);
 
         //get_from_UI ( dens_prev, u_prev, v_prev );
         velocity_step(&u, &v, &u_prev, &v_prev, &bounds, visc, dt);
@@ -223,6 +239,7 @@ int main() {
     destroy_image(&im);
     destroy_image(&screen);
 
+    destroy_array2f(&wear);
     destroy_array2f(&energy);
 
     destroy_array2f(&u);
