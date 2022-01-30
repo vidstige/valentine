@@ -20,11 +20,24 @@ def clear(target: cairo.ImageSurface, color=(1, 1, 1)) -> None:
     ctx.fill()
 
 
+HEART = parse_path("M0 200 v-200 h200 a100,100 90 0,1 0,200 a100,100 90 0,1 -200,0 z")
+
+def p(c: complex) -> Tuple[float, float]:
+    return c.real, c.imag
+
 def draw(target: cairo.Surface, t: float) -> None:
     ctx = cairo.Context(target)
     ctx.scale(1, 1)
+    ctx.translate(200, 200)
     ctx.set_line_width(1)
-    ctx.set_source_rgba(0, 0, 0)
+    ctx.set_source_rgba(1, 1, 1)
+
+    ctx.move_to(*p(HEART.point(0)))
+    n = 100
+    for s in range(1, n + 1):
+        ctx.line_to(*p(HEART.point(s / n)))
+
+    ctx.stroke()
 
 
 def animate(f, draw, dt):
@@ -40,7 +53,7 @@ def animate(f, draw, dt):
 
 def main():
     import sys
-    heart = parse_path("M0 200 v-200 h200 a100,100 90 0,1 0,200 a100,100 90 0,1 -200,0 z")
+    
     animate(sys.stdout.buffer, draw, dt=0.1)
     
 
