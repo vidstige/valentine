@@ -34,6 +34,22 @@ def draw_lines(ctx: cairo.Context, lines: Sequence[complex]):
     ctx.stroke()
 
 
+def parse_color(color: str) -> Tuple[float, float, float]:
+    c = color.lstrip('#')
+    r, g, b = [int(c[i:i + 2], 16) / 255 for i in range(0, len(c), 2)]
+    return r, g, b
+
+
+RAINBOW = list(map(parse_color, [
+    '#FF000D',
+    '#FF7034',
+    '#FFFD01',
+    '#66FF00',
+    '#0165FC',
+    '#6F00FE',
+    '#AD0AFD',
+]))
+
 @dataclass
 class Worm:
     color: Tuple[float, float, float]
@@ -49,7 +65,7 @@ def generate_worms(n) -> Iterable[Worm]:
     rnd = random.normalvariate
     for _ in range(n):
         yield Worm(
-            color=(1, 1, 1),
+            color=random.choice(RAINBOW),
             length=rnd(0.1, 0.05),
             #offset=rnd(0, 0.03),
             offset=random.uniform(0, 1),
