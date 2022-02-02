@@ -51,23 +51,27 @@ def generate_worms(n) -> Iterable[Worm]:
         yield Worm(
             color=(1, 1, 1),
             length=rnd(0.1, 0.05),
-            offset=rnd(0, 0.03),
-            frequency=rnd(10, 5),
+            #offset=rnd(0, 0.03),
+            offset=random.uniform(0, 1),
+            frequency=rnd(8, 5),
             amplitude=rnd(8, 5),
             phase=random.uniform(0, TAU)
         )
    
 
-WORMS = list(generate_worms(8))
+WORMS = list(generate_worms(16))
 
 
-def draw(target: cairo.Surface, t: float) -> None:
+def draw(target: cairo.ImageSurface, t: float) -> None:
     ctx = cairo.Context(target)
     ctx.scale(1, 1)
-    ctx.translate(200, 200)
+    #ctx.translate(200, 200)
+    ctx.translate(target.get_width() / 2, target.get_height() / 2 + 150)
+    ctx.rotate(-3/8*TAU)
+
     ctx.set_line_width(2)
 
-    n = 10
+    n = 16
     for worm in WORMS:
         ctx.set_source_rgba(*worm.color)
         lines = []
