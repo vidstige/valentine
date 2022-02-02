@@ -36,15 +36,17 @@ def draw_lines(ctx: cairo.Context, lines: Sequence[complex]):
 
 @dataclass
 class Worm:
+    color: Tuple[float, float, float]
     length: float
+    offset: float
     frequency: float
     amplitude: float
 
 
 def generate_lines() -> List[Worm]:
     return [
-        Worm(length=0.1, frequency=10, amplitude=5),
-        Worm(length=0.15, frequency=8, amplitude=8),
+        Worm(color=(1, 1, 1), length=0.1, offset=0, frequency=10, amplitude=5),
+        Worm(color=(1, 1, 1), length=0.15, offset=0.03, frequency=8, amplitude=8),
     ]
     
 
@@ -56,13 +58,13 @@ def draw(target: cairo.Surface, t: float) -> None:
     ctx.scale(1, 1)
     ctx.translate(200, 200)
     ctx.set_line_width(2)
-    ctx.set_source_rgba(1, 1, 1)
 
     n = 10
     for worm in WORMS:
+        ctx.set_source_rgba(*worm.color)
         lines = []
         for i in range(n):
-            s = (t - worm.length * i / n) % 1
+            s = (t + worm.offset - worm.length * i / n) % 1
             p = HEART.point(s)
             tangent = HEART.tangent(s)
             if abs(tangent) > 1e-10:
