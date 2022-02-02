@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import os
-from typing import List, Sequence, Tuple
+from typing import Iterable, Sequence, Tuple
 from math import cos, sin, pi
 import random
 
@@ -44,14 +44,21 @@ class Worm:
     phase: float
 
 
-def generate_lines() -> List[Worm]:
-    return [
-        Worm(color=(1, 1, 1), length=0.1, offset=0, frequency=10, amplitude=5, phase=0),
-        Worm(color=(1, 1, 1), length=0.15, offset=0.03, frequency=8, amplitude=8, phase=0),
-    ]
-    
 
-WORMS = generate_lines()
+def generate_worms(n) -> Iterable[Worm]:
+    rnd = random.normalvariate
+    for _ in range(n):
+        yield Worm(
+            color=(1, 1, 1),
+            length=rnd(0.1, 0.05),
+            offset=rnd(0, 0.03),
+            frequency=rnd(10, 5),
+            amplitude=rnd(8, 5),
+            phase=random.uniform(0, TAU)
+        )
+   
+
+WORMS = list(generate_worms(8))
 
 
 def draw(target: cairo.Surface, t: float) -> None:
