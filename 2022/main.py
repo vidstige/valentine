@@ -1,5 +1,5 @@
 import os
-from typing import Tuple
+from typing import Sequence, Tuple
 
 import cairo
 from svg.path import parse_path
@@ -22,22 +22,33 @@ def clear(target: cairo.ImageSurface, color=(1, 1, 1)) -> None:
 
 HEART = parse_path("M0 200 v-200 h200 a100,100 90 0,1 0,200 a100,100 90 0,1 -200,0 z")
 
-def p(c: complex) -> Tuple[float, float]:
-    return c.real, c.imag
+
+def draw_lines(ctx: cairo.Context, lines: Sequence[complex]):
+    ctx.move_to(lines[0].real, lines[0].imag)
+    for p in lines[1:]:
+        ctx.line_to(p.real, p.imag)
+    ctx.stroke()
+
 
 def draw(target: cairo.Surface, t: float) -> None:
     ctx = cairo.Context(target)
     ctx.scale(1, 1)
     ctx.translate(200, 200)
-    ctx.set_line_width(1)
+    ctx.set_line_width(2)
     ctx.set_source_rgba(1, 1, 1)
 
-    ctx.move_to(*p(HEART.point(0)))
-    n = 100
-    for s in range(1, n + 1):
-        ctx.line_to(*p(HEART.point(s / n)))
-
-    ctx.stroke()
+    line_length = 0.05
+    n = 10
+    lines = []
+    for i in range(n):
+        s = (line_length * i / n + t) % 1
+        p = HEART.point(s)
+        lines.append(p)
+        #d = HEART.tangent(s)
+        #if abs(d) > 1e-10:
+            
+        #    normal = d / abs(d) * -1j
+    draw_lines(ctx, lines)
 
 
 def animate(f, draw, dt):
@@ -54,7 +65,7 @@ def animate(f, draw, dt):
 def main():
     import sys
     
-    animate(sys.stdout.buffer, draw, dt=0.1)
+    animate(sys.stdout.buffer, draw, dt=0.01)
     
 
 if __name__ == "__main__":
