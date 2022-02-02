@@ -41,12 +41,13 @@ class Worm:
     offset: float
     frequency: float
     amplitude: float
+    phase: float
 
 
 def generate_lines() -> List[Worm]:
     return [
-        Worm(color=(1, 1, 1), length=0.1, offset=0, frequency=10, amplitude=5),
-        Worm(color=(1, 1, 1), length=0.15, offset=0.03, frequency=8, amplitude=8),
+        Worm(color=(1, 1, 1), length=0.1, offset=0, frequency=10, amplitude=5, phase=0),
+        Worm(color=(1, 1, 1), length=0.15, offset=0.03, frequency=8, amplitude=8, phase=0),
     ]
     
 
@@ -69,7 +70,7 @@ def draw(target: cairo.Surface, t: float) -> None:
             tangent = HEART.tangent(s)
             if abs(tangent) > 1e-10:
                 normal = (tangent / abs(tangent)) * -1j
-                offset = worm.amplitude * sin(worm.frequency * TAU * s)
+                offset = worm.amplitude * sin(worm.frequency * TAU * s + worm.phase)
                 lines.append(p + offset *  normal)
 
         draw_lines(ctx, lines)
