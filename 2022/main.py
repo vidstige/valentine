@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import os
 from typing import List, Sequence, Tuple
 from math import cos, sin, pi
@@ -33,6 +34,22 @@ def draw_lines(ctx: cairo.Context, lines: Sequence[complex]):
     ctx.stroke()
 
 
+@dataclass
+class Worm:
+    length: float
+    frequency: float
+    amplitude: float
+
+
+def generate_lines() -> List[Worm]:
+    return [
+        Worm(length=0.1, frequency=10, amplitude=5)
+    ]
+    
+
+WORMS = generate_lines()
+
+
 def draw(target: cairo.Surface, t: float) -> None:
     ctx = cairo.Context(target)
     ctx.scale(1, 1)
@@ -40,19 +57,19 @@ def draw(target: cairo.Surface, t: float) -> None:
     ctx.set_line_width(2)
     ctx.set_source_rgba(1, 1, 1)
 
-    line_length = 0.05
     n = 10
-    lines = []
-    for i in range(n):
-        s = (line_length * i / n + t) % 1
-        p = HEART.point(s)
-        tangent = HEART.tangent(s)
-        if abs(tangent) > 1e-10:
-            normal = (tangent / abs(tangent)) * -1j
-            offset = 5 * sin(10 * TAU * s)
-            lines.append(p + offset *  normal)
+    for worm in WORMS:
+        lines = []
+        for i in range(n):
+            s = (worm.length * i / n + t) % 1
+            p = HEART.point(s)
+            tangent = HEART.tangent(s)
+            if abs(tangent) > 1e-10:
+                normal = (tangent / abs(tangent)) * -1j
+                offset = worm.amplitude * sin(worm.frequency * TAU * s)
+                lines.append(p + offset *  normal)
 
-    draw_lines(ctx, lines)
+        draw_lines(ctx, lines)
 
 
 def animate(f, draw, dt):
