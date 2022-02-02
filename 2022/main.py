@@ -43,7 +43,8 @@ class Worm:
 
 def generate_lines() -> List[Worm]:
     return [
-        Worm(length=0.1, frequency=10, amplitude=5)
+        Worm(length=0.1, frequency=10, amplitude=5),
+        Worm(length=0.15, frequency=8, amplitude=8),
     ]
     
 
@@ -61,7 +62,7 @@ def draw(target: cairo.Surface, t: float) -> None:
     for worm in WORMS:
         lines = []
         for i in range(n):
-            s = (worm.length * i / n + t) % 1
+            s = (t - worm.length * i / n) % 1
             p = HEART.point(s)
             tangent = HEART.tangent(s)
             if abs(tangent) > 1e-10:
