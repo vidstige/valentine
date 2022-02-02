@@ -1,5 +1,7 @@
 import os
-from typing import Sequence, Tuple
+from typing import List, Sequence, Tuple
+from math import cos, sin, pi
+import random
 
 import cairo
 from svg.path import parse_path
@@ -9,6 +11,7 @@ def parse_resolution(resolution: str) -> Tuple[int, ...]:
     return tuple(int(d) for d in resolution.split('x'))
 
 
+TAU = 2 * pi
 RESOLUTION = parse_resolution(os.environ.get('RESOLUTION', '720x720'))
 
 
@@ -43,11 +46,12 @@ def draw(target: cairo.Surface, t: float) -> None:
     for i in range(n):
         s = (line_length * i / n + t) % 1
         p = HEART.point(s)
-        lines.append(p)
-        #d = HEART.tangent(s)
-        #if abs(d) > 1e-10:
-            
-        #    normal = d / abs(d) * -1j
+        tangent = HEART.tangent(s)
+        if abs(tangent) > 1e-10:
+            normal = (tangent / abs(tangent)) * -1j
+            offset = 5 * sin(10 * TAU * s)
+            lines.append(p + offset *  normal)
+
     draw_lines(ctx, lines)
 
 
