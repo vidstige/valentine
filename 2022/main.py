@@ -13,6 +13,25 @@ from svg.path import parse_path
 random.seed(17)
 
 
+Color = Tuple[float, float, float]
+
+
+def parse_color(color: str) -> Color:
+    c = color.lstrip('#')
+    r, g, b = [int(c[i:i + 2], 16) / 255 for i in range(0, len(c), 2)]
+    return r, g, b
+
+
+RAINBOW = list(map(parse_color, [
+    '#FF000D',
+    '#FF7034',
+    '#FFFD01',
+    '#66FF00',
+    '#0165FC',
+    '#6F00FE',
+    '#AD0AFD',
+]))
+
 def from_cairo(surface: cairo.ImageSurface) -> Image:
     assert surface.get_format() == cairo.FORMAT_ARGB32, "Unsupported pixel format: %s" % surface.get_format()
     return Image.frombuffer('RGBA', (surface.get_width(), surface.get_height()), bytes(surface.get_data()), 'raw')
@@ -35,7 +54,7 @@ def clear(target: cairo.ImageSurface) -> None:
 HEART = parse_path("M0 200 v-200 h200 a100,100 90 0,1 0,200 a100,100 90 0,1 -200,0 z")
 
 
-def draw_fading_lines(ctx: cairo.Context, lines: Sequence[complex], color: Tuple[float, float, float], alpha_range: Tuple[float, float]):
+def draw_fading_lines(ctx: cairo.Context, lines: Sequence[complex], color: Color, alpha_range: Tuple[float, float]):
     alpha_lo, alpha_hi = alpha_range
     ctx.move_to(lines[0].real, lines[0].imag)
     for i, p in enumerate(lines[1:]):
@@ -46,25 +65,9 @@ def draw_fading_lines(ctx: cairo.Context, lines: Sequence[complex], color: Tuple
         ctx.move_to(p.real, p.imag)
 
 
-def parse_color(color: str) -> Tuple[float, float, float]:
-    c = color.lstrip('#')
-    r, g, b = [int(c[i:i + 2], 16) / 255 for i in range(0, len(c), 2)]
-    return r, g, b
-
-
-RAINBOW = list(map(parse_color, [
-    '#FF000D',
-    '#FF7034',
-    '#FFFD01',
-    '#66FF00',
-    '#0165FC',
-    '#6F00FE',
-    '#AD0AFD',
-]))
-
 @dataclass
 class Worm:
-    color: Tuple[float, float, float]
+    color: Color
     length: float
     offset: float
     frequency: float
