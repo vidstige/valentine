@@ -27,11 +27,15 @@ def clear(target: cairo.ImageSurface, color=(1, 1, 1)) -> None:
 HEART = parse_path("M0 200 v-200 h200 a100,100 90 0,1 0,200 a100,100 90 0,1 -200,0 z")
 
 
-def draw_lines(ctx: cairo.Context, lines: Sequence[complex]):
+def draw_fading_lines(ctx: cairo.Context, lines: Sequence[complex], color: Tuple[float, float, float], alpha_range: Tuple[float, float]):
+    alpha_lo, alpha_hi = alpha_range
     ctx.move_to(lines[0].real, lines[0].imag)
-    for p in lines[1:]:
+    for i, p in enumerate(lines[1:]):
+        alpha = alpha_lo + i * (alpha_hi - alpha_lo) / (len(lines) - 1)
+        ctx.set_source_rgba(*color, alpha)
         ctx.line_to(p.real, p.imag)
-    ctx.stroke()
+        ctx.stroke()
+        ctx.move_to(p.real, p.imag)
 
 
 def parse_color(color: str) -> Tuple[float, float, float]:
@@ -75,21 +79,20 @@ def generate_worms(n) -> Iterable[Worm]:
         )
    
 
-WORMS = list(generate_worms(16))
+WORMS = list(generate_worms(64))
 
 
 def draw(target: cairo.ImageSurface, t: float) -> None:
     ctx = cairo.Context(target)
-    ctx.scale(1, 1)
     #ctx.translate(200, 200)
-    ctx.translate(target.get_width() / 2, target.get_height() / 2 + 150)
+    ctx.translate(target.get_width() / 2, target.get_height() / 2 + 200)
     ctx.rotate(-3/8*TAU)
+    ctx.scale(1.5, 1.5)
 
-    ctx.set_line_width(2)
+    ctx.set_line_width(4)
 
-    n = 16
+    n = 32
     for worm in WORMS:
-        ctx.set_source_rgba(*worm.color)
         lines = []
         for i in range(n):
             s = (t + worm.offset - worm.length * i / n) % 1
@@ -100,14 +103,14 @@ def draw(target: cairo.ImageSurface, t: float) -> None:
                 offset = worm.amplitude * sin(worm.frequency * TAU * s + worm.phase)
                 lines.append(p + offset *  normal)
 
-        draw_lines(ctx, lines)
+        draw_fading_lines(ctx, lines, worm.color, (1, 0))
 
 
 def animate(f, draw, dt):
     width, height = RESOLUTION
     surface = cairo.ImageSurface(cairo.Format.RGB24, width, height)
     t = 0
-    while t < 10:
+    while t < 1:
         clear(surface, color=(0, 0, 0))
         draw(surface, t)
         f.write(surface.get_data())
