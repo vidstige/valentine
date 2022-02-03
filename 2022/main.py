@@ -119,11 +119,11 @@ def animate(f, draw, dt):
     surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)
     
     t = 0
-    while t < 10:
+    while t < 1:
         clear(surface)
         draw(surface, t, line_width=8)
         im = from_cairo(surface)
-        blurred = im.filter(ImageFilter.GaussianBlur(radius=4))
+        blurred = im.filter(ImageFilter.GaussianBlur(radius=8))
         clear(surface)
         draw(surface, t, line_width=2)
         sharp = from_cairo(surface)
