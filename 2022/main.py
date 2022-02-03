@@ -23,12 +23,10 @@ TAU = 2 * pi
 RESOLUTION = parse_resolution(os.environ.get('RESOLUTION', '720x720'))
 
 
-def clear(target: cairo.ImageSurface, color=(1, 1, 1)) -> None:
-    r, g, b = color
+def clear(target: cairo.ImageSurface) -> None:
     ctx = cairo.Context(target)
-    ctx.rectangle(0, 0, target.get_width(), target.get_height())
-    ctx.set_source_rgb(r, g, b)
-    ctx.fill()
+    ctx.set_operator(cairo.OPERATOR_CLEAR)
+    ctx.paint()
 
 
 HEART = parse_path("M0 200 v-200 h200 a100,100 90 0,1 0,200 a100,100 90 0,1 -200,0 z")
@@ -89,14 +87,14 @@ def generate_worms(n) -> Iterable[Worm]:
 WORMS = list(generate_worms(64))
 
 
-def draw(target: cairo.ImageSurface, t: float) -> None:
+def draw(target: cairo.ImageSurface, t: float, line_width: float) -> None:
     ctx = cairo.Context(target)
     #ctx.translate(200, 200)
     ctx.translate(target.get_width() / 2, target.get_height() / 2 + 200)
     ctx.rotate(-3/8*TAU)
     ctx.scale(1.5, 1.5)
 
-    ctx.set_line_width(4)
+    ctx.set_line_width(line_width)
 
     n = 32
     for worm in WORMS:
@@ -116,12 +114,18 @@ def draw(target: cairo.ImageSurface, t: float) -> None:
 def animate(f, draw, dt):
     width, height = RESOLUTION
     surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)
+    
     t = 0
-    while t < 1:
-        clear(surface, color=(0, 0, 0))
-        draw(surface, t)
+    while t < 10:
+        clear(surface)
+        draw(surface, t, line_width=8)
         im = from_cairo(surface)
-        f.write(im.tobytes())
+        blurred = im.filter(ImageFilter.GaussianBlur(radius=4))
+        clear(surface)
+        draw(surface, t, line_width=2)
+        sharp = from_cairo(surface)
+        final = Image.alpha_composite(blurred, sharp)
+        f.write(final.tobytes())
         t += dt
 
 
