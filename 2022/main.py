@@ -10,6 +10,9 @@ from PIL import Image, ImageFilter
 from svg.path import parse_path
 
 
+random.seed(17)
+
+
 def from_cairo(surface: cairo.ImageSurface) -> Image:
     assert surface.get_format() == cairo.FORMAT_ARGB32, "Unsupported pixel format: %s" % surface.get_format()
     return Image.frombuffer('RGBA', (surface.get_width(), surface.get_height()), bytes(surface.get_data()), 'raw')
