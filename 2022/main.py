@@ -3,9 +3,16 @@ import os
 from typing import Iterable, Sequence, Tuple
 from math import cos, sin, pi
 import random
+import sys
 
 import cairo
+from PIL import Image, ImageFilter
 from svg.path import parse_path
+
+
+def from_cairo(surface: cairo.ImageSurface) -> Image:
+    assert surface.get_format() == cairo.FORMAT_ARGB32, "Unsupported pixel format: %s" % surface.get_format()
+    return Image.frombuffer('RGBA', (surface.get_width(), surface.get_height()), bytes(surface.get_data()), 'raw')
 
 
 def parse_resolution(resolution: str) -> Tuple[int, ...]:
@@ -108,18 +115,17 @@ def draw(target: cairo.ImageSurface, t: float) -> None:
 
 def animate(f, draw, dt):
     width, height = RESOLUTION
-    surface = cairo.ImageSurface(cairo.Format.RGB24, width, height)
+    surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)
     t = 0
     while t < 1:
         clear(surface, color=(0, 0, 0))
         draw(surface, t)
-        f.write(surface.get_data())
+        im = from_cairo(surface)
+        f.write(im.tobytes())
         t += dt
 
 
 def main():
-    import sys
-    
     animate(sys.stdout.buffer, draw, dt=0.01)
     
 
