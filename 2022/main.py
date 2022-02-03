@@ -22,6 +22,24 @@ def parse_color(color: str) -> Color:
     return r, g, b
 
 
+def mix(x: Color, y: Color, t: float) -> Color:
+    r, g, b = ((1-t) * xc + t * yc for xc, yc in zip(x, y))
+    return r, g, b
+
+
+@dataclass
+class Gradient:
+    stops: Sequence[Color]
+    def sample(self, t: float) -> Color:
+        n = (len(self.stops) - 1)
+        i = int(t * n)
+        return mix(self.stops[i], self.stops[i + 1], t - i / n)
+
+
+def make_gradient(colors: Iterable[str]) -> Gradient:
+    return Gradient(list(map(parse_color, colors)))
+
+
 RAINBOW = list(map(parse_color, [
     '#FF000D',
     '#FF7034',
@@ -31,6 +49,12 @@ RAINBOW = list(map(parse_color, [
     '#6F00FE',
     '#AD0AFD',
 ]))
+ARGON = make_gradient([
+    '#03001e',
+    '#7303c0',
+    '#ec38bc',
+    '#fdeff9',
+])
 
 def from_cairo(surface: cairo.ImageSurface) -> Image:
     assert surface.get_format() == cairo.FORMAT_ARGB32, "Unsupported pixel format: %s" % surface.get_format()
@@ -80,7 +104,8 @@ def generate_worms(n) -> Iterable[Worm]:
     rnd = random.normalvariate
     for _ in range(n):
         yield Worm(
-            color=random.choice(RAINBOW),
+            #color=random.choice(RAINBOW),
+            color=ARGON.sample(random.uniform(0, 1)),
             length=rnd(0.1, 0.05),
             #offset=rnd(0, 0.03),
             offset=random.uniform(0, 1),
