@@ -139,11 +139,11 @@ def animate(f, draw, dt):
     t = 0
     while t < 1:
         clear(surface)
-        draw(surface, t, line_width=8)
+        draw(surface, t, line_width=16)
         im = from_cairo(surface)
-        blurred = im.filter(ImageFilter.GaussianBlur(radius=8))
+        blurred = im.filter(ImageFilter.GaussianBlur(radius=4))
         clear(surface)
-        draw(surface, t, line_width=2)
+        draw(surface, t, line_width=4)
         sharp = from_cairo(surface)
         final = Image.alpha_composite(blurred, sharp)
         f.write(final.tobytes())
