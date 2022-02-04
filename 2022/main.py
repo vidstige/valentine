@@ -40,15 +40,6 @@ def make_gradient(colors: Iterable[str]) -> Gradient:
     return Gradient(list(map(parse_color, colors)))
 
 
-RAINBOW = list(map(parse_color, [
-    '#FF000D',
-    '#FF7034',
-    '#FFFD01',
-    '#66FF00',
-    '#0165FC',
-    '#6F00FE',
-    '#AD0AFD',
-]))
 ARGON = make_gradient([
     '#03001e',
     '#7303c0',
@@ -104,7 +95,6 @@ def generate_worms(n) -> Iterable[Worm]:
     rnd = random.normalvariate
     for _ in range(n):
         yield Worm(
-            #color=random.choice(RAINBOW),
             color=ARGON.sample(random.uniform(0, 1)),
             length=rnd(0.1, 0.05),
             #offset=rnd(0, 0.03),
