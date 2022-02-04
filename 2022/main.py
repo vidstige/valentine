@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import os
 from typing import Iterable, Sequence, Tuple
-from math import cos, sin, pi
+from math import cos, sin, pi, sqrt
 import random
 import sys
 
@@ -109,11 +109,11 @@ WORMS = list(generate_worms(64))
 
 
 def draw(target: cairo.ImageSurface, t: float, line_width: float) -> None:
+    scale = sqrt(target.get_width() * target.get_height()) / 480
     ctx = cairo.Context(target)
-    #ctx.translate(200, 200)
-    ctx.translate(target.get_width() / 2, target.get_height() / 2 + 200)
+    ctx.translate(target.get_width() / 2, target.get_height() / 2 + (target.get_height() - 200))
     ctx.rotate(-3/8*TAU)
-    ctx.scale(1.5, 1.5)
+    ctx.scale(scale, scale)
 
     ctx.set_line_width(line_width)
 
