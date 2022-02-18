@@ -99,25 +99,25 @@ def generate_worms(n) -> Iterable[Worm]:
             length=rnd(0.1, 0.05),
             #offset=rnd(0, 0.03),
             offset=random.uniform(0, 1),
-            frequency=rnd(8, 5),
-            amplitude=rnd(8, 5),
+            frequency=rnd(0, 5),
+            amplitude=rnd(16, 5),
             phase=random.uniform(0, TAU)
         )
    
 
-WORMS = list(generate_worms(64))
+WORMS = list(generate_worms(96))
 
 
 def draw(target: cairo.ImageSurface, t: float, line_width: float) -> None:
     scale = sqrt(target.get_width() * target.get_height()) / 480
     ctx = cairo.Context(target)
-    ctx.translate(target.get_width() / 2, target.get_height() / 2 + (target.get_height() - 200))
+    ctx.translate(target.get_width() / 2, target.get_height() / 2 + (target.get_height() - 300 * scale))
     ctx.rotate(-3/8*TAU)
     ctx.scale(scale, scale)
 
     ctx.set_line_width(line_width)
 
-    n = 32
+    n = 16
     for worm in WORMS:
         lines = []
         for i in range(n):
@@ -139,7 +139,7 @@ def animate(f, draw, dt):
     t = 0
     while t < 1:
         clear(surface)
-        draw(surface, t, line_width=16)
+        draw(surface, t, line_width=12)
         im = from_cairo(surface)
         blurred = im.filter(ImageFilter.GaussianBlur(radius=4))
         clear(surface)
@@ -151,7 +151,7 @@ def animate(f, draw, dt):
 
 
 def main():
-    animate(sys.stdout.buffer, draw, dt=0.01)
+    animate(sys.stdout.buffer, draw, dt=0.008)
     
 
 if __name__ == "__main__":
