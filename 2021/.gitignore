@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+/obj/
+smoked-heart
+
+/actual
+/expected
