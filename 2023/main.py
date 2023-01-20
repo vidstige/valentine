@@ -23,7 +23,6 @@ def create_sdf(path: Path, size: Tuple[float, float], resolution: Tuple[int, int
     center = complex(resolution[0], resolution[1]) * 0.5
     grid = x + 1j * y
     sdf = np.inf * np.ones(resolution)
-    inside = np.full(resolution, False)
     for t in np.linspace(0, 1, n):
         p = path.point(t) * 0.5 + center * 0.5
         n = normal(path, t)
@@ -31,6 +30,15 @@ def create_sdf(path: Path, size: Tuple[float, float], resolution: Tuple[int, int
         sdf = np.minimum(sdf, d)
     
     return sdf
+
+
+def create_inside_lookup(path: Path, size: Tuple[float, float], resolution: Tuple[int, int]) -> np.ndarray:
+    inside = np.full(resolution, False)
+    for xi, x in enumerate(np.linspace(0, size[0], resolution[0])):
+        for yi, y in enumerate(np.linspace(0, size[1], resolution[1])):
+            inside[yi, xi] = is_inside_path(path, x + 1j * y)
+
+    return inside
 
 
 def at(grid: np.ndarray, p: complex) -> float:
@@ -90,11 +98,13 @@ def main():
     N = 1000
     G = 10
     resolution = (400, 400)
+    size = (400, 400)
 
     #dots = [Dot.sample(path, t) for t in np.random.random(N)]
     dots = [random_dot(resolution, 50) for _ in range(N)]
     
-    sdf = create_sdf(path, (400, 400), resolution, n=100)
+    sdf = create_sdf(path, size, resolution, n=100)
+    inside = create_inside_lookup(path, size, resolution)
     dy, dx = np.gradient(G * sdf)
     dt = 0.025
     for t in np.arange(0, 60, dt):
@@ -104,7 +114,7 @@ def main():
             dot.velocity += 20 * -dv * dt
             dot.position += dot.velocity * dt
             
-            if not is_inside(resolution, dot.position) or is_inside_path(path, dot.position):
+            if not is_inside(resolution, dot.position) or at(inside, dot.position):
 
                 #new_dot = Dot.sample(path, np.random.random())
                 new_dot = random_dot(resolution, 50)
