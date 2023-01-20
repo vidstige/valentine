@@ -41,8 +41,10 @@ def create_inside_lookup(path: Path, size: Tuple[float, float], resolution: Tupl
     return inside
 
 
-def at(grid: np.ndarray, p: complex) -> float:
-    return grid[int(p.imag), int(p.real)]
+def at(grid: np.ndarray, size: Tuple[float, float], p: complex) -> float:
+    x = int(p.imag * grid.shape[0] / size[0])
+    y = int(p.real * grid.shape[1] / size[1])
+    return grid[x, y]
 
 
 def encode_frame(im: np.ndarray) -> bytes:
@@ -95,29 +97,29 @@ def is_inside_path(path: Path, p: complex) -> bool:
 def main():
     path = transform(HEART, 0.5, 100 + 100j)
 
-    N = 1000
+    N = 10000
     G = 10
-    resolution = (400, 400)
     size = (400, 400)
+    resolution = (400, 400)
 
     #dots = [Dot.sample(path, t) for t in np.random.random(N)]
-    dots = [random_dot(resolution, 50) for _ in range(N)]
+    dots = [random_dot(resolution, 100) for _ in range(N)]
     
-    sdf = create_sdf(path, size, resolution, n=100)
-    inside = create_inside_lookup(path, size, resolution)
+    sdf = create_sdf(path, (400, 400), resolution, n=100)
+    inside = create_inside_lookup(path, size, (100, 100))
     dy, dx = np.gradient(G * sdf)
     dt = 0.025
     for t in np.arange(0, 60, dt):
         # step
         for dot in dots:
-            dv = at(dx, dot.position) + 1j * at(dy, dot.position)
+            dv = at(dx, size, dot.position) + 1j * at(dy, size, dot.position)
             dot.velocity += 20 * -dv * dt
             dot.position += dot.velocity * dt
             
-            if not is_inside(resolution, dot.position) or at(inside, dot.position):
+            if not is_inside(resolution, dot.position) or at(inside, size, dot.position):
 
                 #new_dot = Dot.sample(path, np.random.random())
-                new_dot = random_dot(resolution, 50)
+                new_dot = random_dot(resolution, 100)
                 dot.position = new_dot.position
                 dot.velocity = new_dot.velocity
         
