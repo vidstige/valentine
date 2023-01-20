@@ -74,14 +74,15 @@ def random_dot(resolution: Tuple[int, int], v: float) -> Dot:
 def main():
     path = transform(HEART, 0.5, 100 + 100j)
 
-    N = 1000
+    N = 10000
+    G = 10
     resolution = (400, 400)
 
     #dots = [Dot.sample(path, t) for t in np.random.random(N)]
-    dots = [random_dot(resolution, 5) for _ in range(N)]
+    dots = [random_dot(resolution, 50) for _ in range(N)]
     
     sdf = create_sdf(path, (400, 400), resolution, n=100)
-    dy, dx = np.gradient(sdf)
+    dy, dx = np.gradient(G * sdf)
     dt = 0.025
     for t in np.arange(0, 60, dt):
         # step
@@ -90,18 +91,18 @@ def main():
             dot.velocity += 20 * -dv * dt
             dot.position += dot.velocity * dt
             if not inside(resolution, dot.position):
-                new_dot = random_dot(resolution, 5)
+                #new_dot = Dot.sample(path, np.random.random())
+                new_dot = random_dot(resolution, 50)
                 dot.position = new_dot.position
                 dot.velocity = new_dot.velocity
         
         # draw
         frame = np.zeros(resolution)
         for dot in dots:
-            frame[int(dot.position.imag), int(dot.position.real)] = 1
+            frame[int(dot.position.imag), int(dot.position.real)] += 0.5
+        
         sys.stdout.buffer.write(encode_frame(from_gray(frame)))
-    
-    #frame = autoscale(sdf)
-    
+        #sys.stdout.buffer.write(encode_frame(from_gray(autoscale(sdf))))
 
 
 if __name__ == "__main__":
