@@ -1,11 +1,11 @@
-from svg.path import Path, Move, Linear, QuadraticBezier, CubicBezier
+from svgpathtools import Path, Line, QuadraticBezier, CubicBezier
 
 def transform(path: Path, multiply: complex, add: complex) -> Path:
     for segment in path:
-        if isinstance(segment, Move):
-            segment.start = segment.start * multiply + add
-            segment.end = segment.end * multiply + add
-        elif isinstance(segment, Linear):
+        #if isinstance(segment, Move):
+        #    segment.start = segment.start * multiply + add
+        #    segment.end = segment.end * multiply + add
+        if isinstance(segment, Line):
             segment.start = segment.start * multiply + add
             segment.end = segment.end * multiply + add
         elif isinstance(segment, QuadraticBezier):

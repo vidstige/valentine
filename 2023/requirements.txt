@@ -1,2 +1,2 @@
-svg.path==6.2
+svgpathtools==1.5.1
 numpy==1.24.1
