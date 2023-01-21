@@ -63,8 +63,10 @@ class Dot:
 
     @staticmethod
     def sample(path: Path, t: float):
-        v = -path.normal(t)
-        return Dot(path.point(t), 20 * v / abs(v))
+        tangent = path.derivative(t)
+        #v = -path.normal(t)
+        v = tangent * e ** (tau * 0.10j)
+        return Dot(path.point(t), 50 * v / abs(v))
 
 
 def is_inside(resolution: Tuple[int, int], p: complex):
@@ -92,7 +94,7 @@ def is_inside_path(path: Path, p: complex) -> bool:
 def main():
     path = transform(HEART, 0.5, 100 + 100j)
 
-    N = 10000
+    N = 1000
     G = 1
     size = (400, 400)
     resolution = (400, 400)
