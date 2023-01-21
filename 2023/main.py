@@ -1,7 +1,8 @@
 from math import e, tau
 import sys
-from typing import Tuple
+from typing import List, Tuple
 
+import cairo
 import numpy as np
 from svgpathtools import parse_path, Path, path_encloses_pt
 
@@ -92,11 +93,28 @@ def is_inside_path(path: Path, p: complex) -> bool:
     return path_encloses_pt(p, outside, path)
 
 
+def clear(target: cairo.ImageSurface) -> None:
+    ctx = cairo.Context(target)
+    ctx.set_operator(cairo.OPERATOR_CLEAR)
+    ctx.paint()
+
+
+def draw(target: cairo.ImageSurface, dots: List[Dot]) -> None:
+    ctx = cairo.Context(target)
+    ctx.set_source_rgb(1, 1, 1)
+    
+    r = 3
+    for dot in dots:
+        ctx.arc(dot.position.real, dot.position.imag, r, 0, tau)
+        ctx.fill()
+
+
 def main():
     path = transform(HEART, 0.5, 100 + 100j)
 
     N = 1000
     G = 1
+    dt = 0.025
     size = (400, 400)
     resolution = (400, 400)
 
@@ -106,7 +124,9 @@ def main():
     sdf = create_sdf(path, (400, 400), resolution, n=100)
     inside = create_inside_lookup(path, size, (100, 100))
     dy, dx = np.gradient(G * sdf)
-    dt = 0.025
+
+    surface = cairo.ImageSurface(cairo.Format.ARGB32, *resolution)
+    
     for t in np.arange(0, 60, dt):
         # step
         for dot in dots:
@@ -114,19 +134,18 @@ def main():
             dot.velocity += 20 * -dv * dt
             dot.position += dot.velocity * dt
             
-            if not is_inside(resolution, dot.position) or at(inside, size, dot.position):
+            if not is_inside(resolution, dot.position): # or at(inside, size, dot.position):
 
                 new_dot = Dot.sample(path, np.random.random())
                 #new_dot = random_dot(resolution, 100)
                 dot.position = new_dot.position
                 dot.velocity = new_dot.velocity
         
-        # draw
-        frame = np.zeros(resolution)
-        for dot in dots:
-            frame[int(dot.position.imag), int(dot.position.real)] += 0.7
+        clear(surface)
+        draw(surface, dots)
         
-        sys.stdout.buffer.write(encode_frame(from_gray(frame)))
+        sys.stdout.buffer.write(surface.get_data())
+        #sys.stdout.buffer.write(encode_frame(from_gray(frame)))
         #sys.stdout.buffer.write(encode_frame(from_gray(autoscale(sdf))))
 
 
