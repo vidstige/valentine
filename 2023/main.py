@@ -63,9 +63,10 @@ class Dot:
 
     @staticmethod
     def sample(path: Path, t: float):
-        tangent = path.derivative(t)
-        #v = -path.normal(t)
-        v = tangent * e ** (tau * 0.10j)
+        if np.random.random() < 0.5:
+            v = path.derivative(t) * e ** (tau * 0.10j)
+        else:
+            v = -path.derivative(t) * e ** (tau * -0.10j)
         return Dot(path.point(t), 50 * v / abs(v))
 
 
