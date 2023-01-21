@@ -1,3 +1,4 @@
+from collections import deque
 from math import e, tau
 import sys
 from typing import List, Tuple
@@ -61,14 +62,21 @@ class Dot:
     def __init__(self, position: complex, velocity: complex):
         self.position = position
         self.velocity = velocity
+        self.trace = deque()
 
-    @staticmethod
-    def sample(path: Path, t: float):
-        if np.random.random() < 0.5:
-            v = path.derivative(t) * e ** (tau * 0.10j)
-        else:
-            v = -path.derivative(t) * e ** (tau * -0.10j)
-        return Dot(path.point(t), 50 * v / abs(v))
+    def update(self, acceleration: complex, dt: float) -> None:
+        self.trace.appendleft(self.position)
+        while len(self.trace) > 64:
+            self.trace.pop()
+
+        self.velocity += acceleration * dt
+        self.position += self.velocity * dt
+
+
+    def respawn(self, position: complex, velocity: complex) -> None:
+        self.trace.clear()
+        self.position = position
+        self.velocity = velocity
 
 
 def is_inside(resolution: Tuple[int, int], p: complex):
@@ -103,22 +111,34 @@ def draw(target: cairo.ImageSurface, dots: List[Dot]) -> None:
     ctx = cairo.Context(target)
     ctx.set_source_rgb(1, 1, 1)
     
-    r = 3
+    #r = 3
+    ctx.set_line_width(1)
     for dot in dots:
-        ctx.arc(dot.position.real, dot.position.imag, r, 0, tau)
-        ctx.fill()
+        for p in dot.trace:
+            ctx.line_to(p.real, p.imag)
+        ctx.stroke()
+        #ctx.arc(dot.position.real, dot.position.imag, r, 0, tau)
+        #ctx.fill()
+
+
+def spawn(path: Path, t: float) -> Tuple[complex, complex]:
+    if np.random.random() < 0.5:
+        v = path.derivative(t) * e ** (tau * 0.10j)
+    else:
+        v = -path.derivative(t) * e ** (tau * -0.10j)
+    return path.point(t), 50 * v / abs(v)
 
 
 def main():
     path = transform(HEART, 0.5, 100 + 100j)
 
-    N = 1000
+    N = 100
     G = 1
     dt = 0.025
     size = (400, 400)
     resolution = (400, 400)
 
-    dots = [Dot.sample(path, t) for t in np.random.random(N)]
+    dots = [Dot(*spawn(path, t)) for t in np.random.random(N)]
     #dots = [random_dot(resolution, 100) for _ in range(N)]
     
     sdf = create_sdf(path, (400, 400), resolution, n=100)
@@ -131,15 +151,10 @@ def main():
         # step
         for dot in dots:
             dv = at(dx, size, dot.position) + 1j * at(dy, size, dot.position)
-            dot.velocity += 20 * -dv * dt
-            dot.position += dot.velocity * dt
+            dot.update(20 * -dv, dt)
             
-            if not is_inside(resolution, dot.position): # or at(inside, size, dot.position):
-
-                new_dot = Dot.sample(path, np.random.random())
-                #new_dot = random_dot(resolution, 100)
-                dot.position = new_dot.position
-                dot.velocity = new_dot.velocity
+            if not is_inside(resolution, dot.position) or at(inside, size, dot.position):
+                dot.respawn(*spawn(path, np.random.random()))
         
         clear(surface)
         draw(surface, dots)
