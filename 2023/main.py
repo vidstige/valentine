@@ -66,12 +66,17 @@ class Dot:
 
     def update(self, acceleration: complex, dt: float) -> None:
         self.trace.appendleft(self.position)
-        while len(self.trace) > 64:
+        while len(self.trace) > 32:
             self.trace.pop()
 
         self.velocity += acceleration * dt
         self.position += self.velocity * dt
 
+    def retract(self):
+        """undoes last update"""
+        self.position = self.trace.popleft()
+        if self.trace:
+            self.trace.pop()
 
     def respawn(self, position: complex, velocity: complex) -> None:
         self.trace.clear()
@@ -142,7 +147,7 @@ def main():
     #dots = [random_dot(resolution, 100) for _ in range(N)]
     
     sdf = create_sdf(path, (400, 400), resolution, n=100)
-    inside = create_inside_lookup(path, size, (100, 100))
+    inside = create_inside_lookup(path, size, (50, 50))
     dy, dx = np.gradient(G * sdf)
 
     surface = cairo.ImageSurface(cairo.Format.ARGB32, *resolution)
@@ -154,7 +159,9 @@ def main():
             dot.update(20 * -dv, dt)
             
             if not is_inside(resolution, dot.position) or at(inside, size, dot.position):
-                dot.respawn(*spawn(path, np.random.random()))
+                dot.retract()
+                if not dot.trace:
+                    dot.respawn(*spawn(path, np.random.random()))
         
         clear(surface)
         draw(surface, dots)
