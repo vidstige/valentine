@@ -1,4 +1,5 @@
 from collections import deque
+from functools import partial
 from math import e, tau
 import sys
 from typing import Dict, List, Tuple
@@ -54,7 +55,7 @@ def encode_frame(im: np.ndarray) -> bytes:
 
 
 def from_gray(im: np.ndarray) -> np.ndarray:
-    return np.dstack([im, im, im])
+    return np.dstack([im, im, im, np.ones_like(im)])
 
 
 def autoscale(x: np.ndarray) -> np.ndarray:
@@ -94,14 +95,14 @@ def is_inside(resolution: Tuple[int, int], p: complex):
     return 0 < p.real < width and 0 < p.imag < height
 
 
-def cuniform(resolution: Tuple[int, int]) -> complex:
-    width, height = resolution    
+def cuniform(size: Tuple[float, float]) -> complex:
+    width, height = size    
     return complex(width * np.random.random(), height * np.random.random())
 
 
-def random_dot(resolution: Tuple[int, int], v: float) -> Dot:
+def random_dot(size: Tuple[float, float], v: float) -> Dot:
     return Dot(
-        cuniform(resolution),
+        cuniform(size),
         v * e ** (tau * 1j * np.random.random()),
     )
 
@@ -123,7 +124,7 @@ def draw(target: cairo.ImageSurface, dots: List[Dot], color: Color) -> None:
     ctx.set_source_rgb(1, 1, 1)
     
     #r = 3
-    ctx.set_line_width(1)
+    ctx.set_line_width(0.2)
     ctx.set_source_rgb(*color)
     for dot in dots:
         for p in dot.trace:
@@ -132,13 +133,6 @@ def draw(target: cairo.ImageSurface, dots: List[Dot], color: Color) -> None:
         #ctx.arc(dot.position.real, dot.position.imag, r, 0, tau)
         #ctx.fill()
 
-
-def spawn(path: Path, t: float) -> Tuple[complex, complex]:
-    if np.random.random() < 0.5:
-        v = path.derivative(t) * e ** (tau * 0.10j)
-    else:
-        v = -path.derivative(t) * e ** (tau * -0.10j)
-    return path.point(t), 50 * v / abs(v)
 
 gradient_cache = {}  # type: Dict[int, Tuple[np.ndarray, np.ndarray]]
 def gradient(field: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -156,47 +150,67 @@ def gradient_at(field: np.ndarray, size: Tuple[float, float], p: complex) -> com
     return at(dx, size, p) + 1j * at(dy, size, p)
 
 
+# spawning functions
+def on_path(path: Path, t: float) -> Tuple[complex, complex]:
+    if np.random.random() < 0.5:
+        v = path.derivative(t) * e ** (tau * 0.10j)
+    else:
+        v = -path.derivative(t) * e ** (tau * -0.10j)
+
+    return path.point(t), 50 * v / abs(v)
+
+# along line
+def along_line(p0: complex, p1: complex, v: complex, t: float) -> Tuple[complex, complex]:
+    return p0 * (1 - t) + p1 * t, v
+
+
+def along_field(field: np.ndarray, size: Tuple[float, float], t: float) -> Tuple[complex, complex]:
+    del t
+    p = cuniform(size)
+    return p, -1j * gradient_at(field, size, p)
+
+
 def main():
-    path = transform(HEART, 0.5, 100 + 100j)
+    path = transform(HEART, 0.50, 100 + 100j)
 
     N = 100
-    G = 1
+    G = 10000
     dt = 0.025
     size = (400, 400)
     resolution = (400, 400)
 
-    #dots = [Dot(*spawn(path, t)) for t in np.random.random(N)]
-    dots = [random_dot(resolution, 100) for _ in range(N)]
-    
-    sdf = create_sdf(path, (400, 400), resolution, n=100)
+    #sdf = create_sdf(path, (400, 400), resolution, n=100)
+    #field = G * sdf
     #inside = create_inside_lookup(path, size, (50, 50))
-    velocity_field = G * sdf
+    
+    rng = np.random.Generator(np.random.PCG64(1337))
+    field = G * generate_perlin_noise_2d(resolution, (5, 5), rng)
+
+    #spawn = partial(on_path, path)
+    #spawn = partial(along_line, 0, 1j*size[1], 50)
+    spawn = partial(along_field, field, size)
+    dots = [Dot(*spawn(t)) for t in np.random.random(N)]
 
     surface = cairo.ImageSurface(cairo.Format.ARGB32, *resolution)
-    
     for t in np.arange(0, 60, dt):
         # step
         for dot in dots:
-            dv = gradient_at(velocity_field, size, dot.position)
+            dv = gradient_at(field, size, dot.position)
             #dv = at(dx, size, dot.position) + 1j * at(dy, size, dot.position)
-            dot.update(20 * -dv, dt)
+            dot.update(-dv, dt)
             
             #if not is_inside(resolution, dot.position) or at(inside, size, dot.position):
             if not is_inside(resolution, dot.position):
                 dot.retract()
                 if not dot.trace:
-                    dot.respawn(*spawn(path, np.random.random()))
+                    dot.respawn(*spawn(np.random.random()))
         
         clear(surface, (1, 1, 1))
         draw(surface, dots, (0, 0, 0))
         
-        #rng = np.random.Generator(np.random.PCG64(1337))
-        #noise = generate_perlin_noise_2d(resolution, (5, 5), rng)
-        #sys.stdout.buffer.write(encode_frame(from_gray(noise * 0.5 + 0.5)))
-
         sys.stdout.buffer.write(surface.get_data())
         #sys.stdout.buffer.write(encode_frame(from_gray(frame)))
-        #sys.stdout.buffer.write(encode_frame(from_gray(autoscale(sdf))))
+        #sys.stdout.buffer.write(encode_frame(from_gray(autoscale(field))))
 
 
 if __name__ == "__main__":
