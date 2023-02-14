@@ -89,6 +89,7 @@ class Dot:
     def retract(self):
         """undoes last update"""
         self.position = self.trace.popleft()
+        self.velocity = 0
         if self.trace:
             self.trace.pop()
 
@@ -167,7 +168,9 @@ def on_path(path: Path, t: float) -> Tuple[complex, complex]:
     return path.point(t), 50 * v / abs(v)
 
 # along line
-def along_line(p0: complex, p1: complex, v: complex, t: float) -> Tuple[complex, complex]:
+def along_line(rng: np.random.Generator, field: np.ndarray, p0: complex, p1: complex, v: complex) -> Tuple[complex, complex]:
+    del field
+    t = rng.random()
     return p0 * (1 - t) + p1 * t, v
 
 
@@ -194,12 +197,40 @@ def field_resolution(field: np.ndarray) -> Tuple[int, int]:
     return width, height
     
 
-def along_field(rng: np.random.Generator, field: np.ndarray, size: Tuple[float, float], v: float, t: float) -> Tuple[complex, complex]:
-    del t
+def along_field(rng: np.random.Generator, field: np.ndarray, size: Tuple[float, float], v: float) -> Tuple[complex, complex]:
     #p = cuniform(rng, size)
     p = to_size(complex(*sample_2d(rng, pdf=as_pdf(field))), size, field_resolution(field))
     return p, v * -1j * gradient_at(field, size, p)
 
+
+Spawn = Callable[[np.random.Generator, np.ndarray], Tuple[complex, complex]]
+class Timeline:
+    def __init__(self, rng: np.random.Generator):
+        self.rng = rng
+        self.fields = []  # type: List[Tuple[float, np.ndarray]]
+        self.spawns = []  # type: List[Tuple[float, Spawn]]
+
+    def add(self, field: np.ndarray, t: float) -> None:
+        self.fields.append((t, field))
+        self.fields.sort(reverse=True)
+
+    def add_spawn(self, spawn: Spawn, t:float) -> None:
+        self.spawns.append((t, spawn))
+        self.spawns.sort(reverse=True)
+
+    def field(self, t: float) -> np.ndarray:
+        """Returns the vector field at time t"""
+        for start, field in self.fields:
+            if t >= start:            
+                return field
+        raise Exception(f'no field for time {t}')
+    
+    def spawn(self, t: float) -> Tuple[complex, complex]:
+        for start, spawn in self.spawns:
+            if t >= start:
+                field = self.field(t)
+                return spawn(self.rng, field)
+        raise Exception(f'no spawn for time {t}')
 
 def main():
     path = transform(HEART, 0.50, 100 + 100j)
@@ -211,21 +242,19 @@ def main():
     size = (400, 400)
     resolution = (400, 400)
 
-    #sdf = create_sdf(path, size, resolution, n=100)
-    #field = G * sdf
-    #inside = create_inside_lookup(path, size, (50, 50))
-    
     rng = np.random.Generator(np.random.PCG64(1337))
-    field = G * 5 * generate_perlin_noise_2d(resolution, (5, 5), rng)
+    timeline = Timeline(rng)
+    #timeline.add(G * 5 * generate_perlin_noise_2d(resolution, (5, 5), rng), 0)
+    timeline.add(G * create_sdf(path, size, resolution, n=100), 0)
 
-    #spawn = partial(on_path, path)
-    spawn = partial(along_line, 0, 1j*size[1], 100)
-    #spawn = partial(along_field, rng, field, size, 0.1)
-    dots = [Dot(*spawn(t)) for t in np.random.random(N)]
+    timeline.add_spawn(partial(along_line, p0=0, p1=1j*size[1], v=200), 0)
+    timeline.add_spawn(partial(along_field, size=size, v=0.05), 10)
+    dots = [Dot(*timeline.spawn(0.0)) for _ in range(N)]
 
     output_resolution = (400, 400)
     surface = cairo.ImageSurface(cairo.Format.ARGB32, *output_resolution)
     for t in np.arange(0, 60, dt):
+        field = timeline.field(t)
         # step
         for dot in dots:
             dv = gradient_at(field, size, dot.position)
@@ -235,7 +264,8 @@ def main():
             if not is_inside((size[0] - 1, size[1] - 1), dot.position):
                 dot.retract()
                 if not dot.trace:
-                    dot.respawn(*spawn(np.random.random()))
+                    print('spawning new line', file=sys.stderr)
+                    dot.respawn(*timeline.spawn(t))
         
         clear(surface, (1, 1, 1))
         draw(surface, dots, (0, 0, 0), line_width=LINE_WIDTH)
