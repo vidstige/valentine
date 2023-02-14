@@ -175,7 +175,7 @@ def main():
     G = 20
     dt = 0.025
     size = (400, 400)
-    resolution = (400, 400)
+    resolution = (800, 800)
 
     sdf = create_sdf(path, size, resolution, n=100)
     field = G * sdf
@@ -189,7 +189,8 @@ def main():
     spawn = partial(along_field, field, size)
     dots = [Dot(*spawn(t)) for t in np.random.random(N)]
 
-    surface = cairo.ImageSurface(cairo.Format.ARGB32, *resolution)
+    output_resolution = (400, 400)
+    surface = cairo.ImageSurface(cairo.Format.ARGB32, *output_resolution)
     for t in np.arange(0, 60, dt):
         # step
         for dot in dots:
