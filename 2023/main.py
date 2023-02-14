@@ -6,7 +6,6 @@ from typing import Callable, Dict, List, Tuple
 
 import cairo
 import numpy as np
-from numpy.lib.function_base import meshgrid
 from svgpathtools import parse_path, Path, path_encloses_pt
 
 from transform import transform
@@ -172,17 +171,30 @@ def along_line(p0: complex, p1: complex, v: complex, t: float) -> Tuple[complex,
     return p0 * (1 - t) + p1 * t, v
 
 
-def along_field(field: np.ndarray, size: Tuple[float, float], t: float) -> Tuple[complex, complex]:
+def sample_2d(rng: np.random.Generator, pdf: np.ndarray):
+    index = rng.choice(np.arange(pdf.size), p=pdf.ravel() / np.sum(pdf))
+    return np.unravel_index(index, pdf.shape)
+
+
+def to_size(c: complex, size: Tuple[float, float], resolution: Tuple[int, int]) -> complex:
+    return complex(
+        c.real * size[0] / resolution[0],
+        c.imag * size[1] / resolution[1],
+    )
+
+def along_field(rng: np.random.Generator, field: np.ndarray, size: Tuple[float, float], v: float, t: float) -> Tuple[complex, complex]:
     del t
-    p = cuniform(size)
-    return p, -1j * gradient_at(field, size, p)
+    #p = cuniform(size)
+    p = to_size(complex(*sample_2d(rng, field)), size, field.shape)
+    #print(p, field.shape, file=sys.stderr)
+    return p, v * -1j * gradient_at(field, size, p)
 
 
 def main():
     path = transform(HEART, 0.50, 100 + 100j)
 
     N = 100
-    G = 200
+    G = 500
     dt = 0.025
     size = (400, 400)
     resolution = (800, 800)
@@ -191,12 +203,12 @@ def main():
     field = G * sdf
     #inside = create_inside_lookup(path, size, (50, 50))
     
-    #rng = np.random.Generator(np.random.PCG64(1337))
+    rng = np.random.Generator(np.random.PCG64(1337))
     #field = G * generate_perlin_noise_2d(resolution, (5, 5), rng)
 
     #spawn = partial(on_path, path)
     #spawn = partial(along_line, 0, 1j*size[1], 50)
-    spawn = partial(along_field, field, size)
+    spawn = partial(along_field, rng, field, size, 0.1)
     dots = [Dot(*spawn(t)) for t in np.random.random(N)]
 
     output_resolution = (400, 400)
@@ -204,7 +216,7 @@ def main():
     for t in np.arange(0, 60, dt):
         # step
         for dot in dots:
-            dv = gradient_at(field, size, dot.position, at=at_lerp)
+            dv = gradient_at(field, size, dot.position, at=at)
             dot.update(-dv, dt)
             
             #if not is_inside(resolution, dot.position) or at(inside, size, dot.position):
