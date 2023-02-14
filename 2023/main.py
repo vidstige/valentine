@@ -208,6 +208,11 @@ def along_field(rng: np.random.Generator, field: np.ndarray, size: Tuple[float, 
     return p, v * -1j * gradient_at(field, size, p)
 
 
+def everywhere(rng: np.random.Generator, field: np.ndarray, size: Tuple[float, float], v: complex) -> Tuple[complex, complex]:
+    del field
+    return cuniform(rng, size), v
+
+
 Spawn = Callable[[np.random.Generator, np.ndarray], Tuple[complex, complex]]
 T = TypeVar('T')
 class Timeline:
@@ -249,19 +254,21 @@ class Timeline:
 
 
 def main():
-    path = transform(HEART, 0.50, 100 + 100j)
+    scale = 1
+    path = transform(HEART, 1.0, 0.5*(720 - scale*400) + 0.5*(720j - scale*400j))
 
     N = 1024
     LINE_WIDTH = 0.1
     G = 500
     dt = 0.025
-    size = (400, 400)
+    size = (720, 720)
     resolution = (400, 400)
 
     rng = np.random.Generator(np.random.PCG64(1337))
     timeline = Timeline(rng)
     timeline.add(G * 5 * generate_perlin_noise_2d(resolution, (5, 5), rng), 0)
-    timeline.add_spawn(partial(along_line, p0=0, p1=1j*size[1], v=100), 0)
+    timeline.add_spawn(partial(everywhere, size=size, v=200), 0)
+    timeline.add_spawn(partial(along_line, p0=0, p1=1j*size[1], v=200), 0.1)
     timeline.add_damping(0, 0)
 
     timeline.add(G * create_sdf(path, size, resolution, n=100), 12)
@@ -270,16 +277,11 @@ def main():
     
     dots = [Dot(*timeline.spawn(0.0)) for _ in range(N)]
 
-    output_resolution = (400, 400)
+    #output_resolution = (400, 400)
+    output_resolution = (720, 720)
     surface = cairo.ImageSurface(cairo.Format.ARGB32, *output_resolution)
-    for t in np.arange(0, 60, dt):
+    for t in np.arange(0, 30, dt):
         field = timeline.field(t)
-
-        # respawn lines
-        #if t > 4 and t < 8:
-        #    k = 32
-        #    for dot in rng.choice(dots, k):
-        #        dot.respawn(*timeline.spawn(t))
 
         # step
         for dot in dots:
