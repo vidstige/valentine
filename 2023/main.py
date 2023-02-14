@@ -2,7 +2,7 @@ from collections import deque
 from functools import partial
 from math import e, tau
 import sys
-from typing import Any, Callable, Dict, List, Tuple, TypeVar
+from typing import Callable, Dict, List, Tuple, TypeVar
 
 import cairo
 import numpy as np
@@ -253,9 +253,17 @@ class Timeline:
         return self._first(self.dampings, t)
 
 
+def fit_to(path: Path, size: Tuple[float, float], padding_fraction: float=0) -> Path:
+    """Rescales cordinates to fit a specific resolution with paddning"""    
+    xmin, xmax, ymin, ymax = path.bbox()
+    w, h = xmax - xmin, ymax - ymin
+    scale = (1 - padding_fraction) * max(size) / max(w, h)
+    return transform(path, scale, complex(xmin, ymin) + complex(w, h) * padding_fraction)
+
+
 def main():
-    scale = 1
-    path = transform(HEART, 1.0, 0.5*(720 - scale*400) + 0.5*(720j - scale*400j))
+    #scale = 1
+    #path = transform(HEART, 1.0, 0.5*(720 - scale*400) + 0.5*(720j - scale*400j))
 
     N = 1024
     LINE_WIDTH = 0.1
@@ -264,6 +272,8 @@ def main():
     size = (720, 720)
     resolution = (400, 400)
 
+    path = fit_to(HEART, size, padding_fraction=0.5)
+
     rng = np.random.Generator(np.random.PCG64(1337))
     timeline = Timeline(rng)
     timeline.add(G * 5 * generate_perlin_noise_2d(resolution, (5, 5), rng), 0)
@@ -271,9 +281,9 @@ def main():
     timeline.add_spawn(partial(along_line, p0=0, p1=1j*size[1], v=200), 0.1)
     timeline.add_damping(0, 0)
 
-    timeline.add(G * create_sdf(path, size, resolution, n=100), 12)
-    timeline.add_spawn(partial(along_field, size=size, v=0.051), 12)
-    timeline.add_damping(0.005, 12)
+    timeline.add(G * create_sdf(path, size, resolution, n=100), 4)
+    timeline.add_spawn(partial(along_field, size=size, v=0.051), 4)
+    timeline.add_damping(0.005, 4)
     
     dots = [Dot(*timeline.spawn(0.0)) for _ in range(N)]
 
