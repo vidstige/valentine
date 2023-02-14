@@ -127,12 +127,12 @@ def clear(target: cairo.ImageSurface, color: Color) -> None:
     ctx.paint()
 
 
-def draw(target: cairo.ImageSurface, dots: List[Dot], color: Color) -> None:
+def draw(target: cairo.ImageSurface, dots: List[Dot], color: Color, line_width: float) -> None:
     ctx = cairo.Context(target)
     ctx.set_source_rgb(1, 1, 1)
     
     #r = 3
-    ctx.set_line_width(1)
+    ctx.set_line_width(line_width)
     ctx.set_source_rgb(*color)
     for dot in dots:
         for p in dot.trace:
@@ -172,8 +172,15 @@ def along_line(p0: complex, p1: complex, v: complex, t: float) -> Tuple[complex,
 
 
 def sample_2d(rng: np.random.Generator, pdf: np.ndarray):
-    index = rng.choice(np.arange(pdf.size), p=pdf.ravel() / np.sum(pdf))
+    index = rng.choice(np.arange(pdf.size), p=pdf.ravel())
     return np.unravel_index(index, pdf.shape)
+
+
+def as_pdf(field: np.ndarray):
+    lo = np.min(field)
+    hi = np.max(field)
+    pdf = hi - (field - lo)  # reverse and move to zero
+    return pdf / np.sum(pdf)
 
 
 def to_size(c: complex, size: Tuple[float, float], resolution: Tuple[int, int]) -> complex:
@@ -182,10 +189,15 @@ def to_size(c: complex, size: Tuple[float, float], resolution: Tuple[int, int]) 
         c.imag * size[1] / resolution[1],
     )
 
+def field_resolution(field: np.ndarray) -> Tuple[int, int]:
+    width, height = field.shape
+    return width, height
+    
+
 def along_field(rng: np.random.Generator, field: np.ndarray, size: Tuple[float, float], v: float, t: float) -> Tuple[complex, complex]:
     del t
     #p = cuniform(size)
-    p = to_size(complex(*sample_2d(rng, field)), size, field.shape)
+    p = to_size(complex(*sample_2d(rng, pdf=as_pdf(field))), size, field_resolution(field))
     #print(p, field.shape, file=sys.stderr)
     return p, v * -1j * gradient_at(field, size, p)
 
@@ -193,11 +205,12 @@ def along_field(rng: np.random.Generator, field: np.ndarray, size: Tuple[float, 
 def main():
     path = transform(HEART, 0.50, 100 + 100j)
 
-    N = 100
-    G = 500
+    N = 1024
+    LINE_WIDTH = 0.2
+    G = 400
     dt = 0.025
     size = (400, 400)
-    resolution = (800, 800)
+    resolution = (400, 400)
 
     sdf = create_sdf(path, size, resolution, n=100)
     field = G * sdf
@@ -226,7 +239,7 @@ def main():
                     dot.respawn(*spawn(np.random.random()))
         
         clear(surface, (1, 1, 1))
-        draw(surface, dots, (0, 0, 0))
+        draw(surface, dots, (0, 0, 0), line_width=LINE_WIDTH)
         
         sys.stdout.buffer.write(surface.get_data())
         #sys.stdout.buffer.write(encode_frame(from_gray(frame)))
