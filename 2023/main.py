@@ -76,20 +76,23 @@ class Dot:
     def __init__(self, position: complex, velocity: complex):
         self.position = position
         self.velocity = velocity
-        self.trace = deque()  # type: deque[complex]
+        self.trace = deque()  # type: deque[Tuple[complex, complex]]
 
     def update(self, acceleration: complex, dt: float) -> None:
-        self.trace.appendleft(self.position)
+        self.trace.appendleft((self.position, self.velocity))
         while len(self.trace) > 32:
             self.trace.pop()
 
         self.velocity += acceleration * dt
         self.position += self.velocity * dt
 
+    def damp(self, damping: float) -> None:
+        self.velocity *= (1.0 - damping)
+
     def retract(self):
         """undoes last update"""
-        self.position = self.trace.popleft()
-        self.velocity = 0
+        self.position, self.velocity = self.trace.popleft()
+        #self.velocity = 0
         if self.trace:
             self.trace.pop()
 
@@ -136,7 +139,7 @@ def draw(target: cairo.ImageSurface, dots: List[Dot], color: Color, line_width: 
     ctx.set_line_width(line_width)
     ctx.set_source_rgb(*color)
     for dot in dots:
-        for p in dot.trace:
+        for p, _ in dot.trace:
             ctx.line_to(p.real, p.imag)
         ctx.stroke()
         #ctx.arc(dot.position.real, dot.position.imag, r, 0, tau)
@@ -200,6 +203,8 @@ def field_resolution(field: np.ndarray) -> Tuple[int, int]:
 def along_field(rng: np.random.Generator, field: np.ndarray, size: Tuple[float, float], v: float) -> Tuple[complex, complex]:
     #p = cuniform(rng, size)
     p = to_size(complex(*sample_2d(rng, pdf=as_pdf(field))), size, field_resolution(field))
+    
+    #return p, rng.choice((-1, 1)) * v * -1j * gradient_at(field, size, p)
     return p, v * -1j * gradient_at(field, size, p)
 
 
@@ -232,12 +237,16 @@ class Timeline:
                 return spawn(self.rng, field)
         raise Exception(f'no spawn for time {t}')
 
+    def damping(self, t: float) -> float:
+        return 0.01
+
+
 def main():
     path = transform(HEART, 0.50, 100 + 100j)
 
     N = 1024
     LINE_WIDTH = 0.1
-    G = 400
+    G = 500
     dt = 0.025
     size = (400, 400)
     resolution = (400, 400)
@@ -247,26 +256,34 @@ def main():
     #timeline.add(G * 5 * generate_perlin_noise_2d(resolution, (5, 5), rng), 0)
     timeline.add(G * create_sdf(path, size, resolution, n=100), 0)
 
-    timeline.add_spawn(partial(along_line, p0=0, p1=1j*size[1], v=200), 0)
-    timeline.add_spawn(partial(along_field, size=size, v=0.05), 10)
+    #timeline.add_spawn(partial(along_line, p0=0, p1=1j*size[1], v=100), 0)
+    timeline.add_spawn(partial(along_field, size=size, v=0.051), 0)
     dots = [Dot(*timeline.spawn(0.0)) for _ in range(N)]
 
     output_resolution = (400, 400)
     surface = cairo.ImageSurface(cairo.Format.ARGB32, *output_resolution)
     for t in np.arange(0, 60, dt):
         field = timeline.field(t)
+
+        # respawn lines
+        #if t > 4 and t < 8:
+        #    k = 32
+        #    for dot in rng.choice(dots, k):
+        #        dot.respawn(*timeline.spawn(t))
+
         # step
         for dot in dots:
             dv = gradient_at(field, size, dot.position)
             dot.update(-dv, dt)
+            dot.damp(timeline.damping(t))
             
             #if not is_inside(resolution, dot.position) or at(inside, size, dot.position):
             if not is_inside((size[0] - 1, size[1] - 1), dot.position):
                 dot.retract()
                 if not dot.trace:
-                    print('spawning new line', file=sys.stderr)
+                    #print('spawning new line', file=sys.stderr)
                     dot.respawn(*timeline.spawn(t))
-        
+
         clear(surface, (1, 1, 1))
         draw(surface, dots, (0, 0, 0), line_width=LINE_WIDTH)
         
