@@ -6,9 +6,9 @@ from typing import Callable, Dict, List, Tuple, TypeVar
 
 import cairo
 import numpy as np
-from svgpathtools import parse_path, Path, path_encloses_pt
+from svgpathtools import parse_path, Path, path_encloses_pt, svg2paths
 
-from transform import transform
+#from transform import transform
 from perlin import generate_perlin_noise_2d
 
 
@@ -257,40 +257,51 @@ def fit_to(path: Path, size: Tuple[float, float], padding_fraction: float=0) -> 
     """Rescales cordinates to fit a specific resolution with paddning"""    
     xmin, xmax, ymin, ymax = path.bbox()
     w, h = xmax - xmin, ymax - ymin
-    scale = (1 - padding_fraction) * max(size) / max(w, h)
-    return transform(path, scale, complex(xmin, ymin) + complex(w, h) * padding_fraction)
+    s = (1 - padding_fraction) * max(size) / max(w, h)
+    t = complex(xmin, ymin) + 0.5 * complex(w, h)
+    return path.scaled(s).translated(t)
+    #return transform(path, s, )
 
 
 def main():
-    #scale = 1
-    #path = transform(HEART, 1.0, 0.5*(720 - scale*400) + 0.5*(720j - scale*400j))
-
     N = 1024
-    LINE_WIDTH = 0.1
-    G = 500
+    LINE_WIDTH = 0.25
+    G = 300
     dt = 0.025
     size = (720, 720)
     resolution = (400, 400)
 
-    path = fit_to(HEART, size, padding_fraction=0.5)
+    heart = fit_to(HEART, size, padding_fraction=0.5)
+    volumental = fit_to(Path(*svg2paths('volumental.svg')[0]), size, padding_fraction=0.5)
+    volumental = volumental.translated(complex(0, 0.25 * size[1]))  # workaround
 
     rng = np.random.Generator(np.random.PCG64(1337))
     timeline = Timeline(rng)
-    timeline.add(G * 5 * generate_perlin_noise_2d(resolution, (5, 5), rng), 0)
+    # start with side-ways lines over perlin field
+    timeline.add(G * 15 * generate_perlin_noise_2d(resolution, (5, 5), rng), 0)
     timeline.add_spawn(partial(everywhere, size=size, v=200), 0)
     timeline.add_spawn(partial(along_line, p0=0, p1=1j*size[1], v=200), 0.1)
     timeline.add_damping(0, 0)
 
-    timeline.add(G * create_sdf(path, size, resolution, n=100), 4)
+    # switch to volumental logo after 4 seconds
+    timeline.add(G * create_sdf(volumental, size, resolution, n=200), 4)
     timeline.add_spawn(partial(along_field, size=size, v=0.051), 4)
-    timeline.add_damping(0.005, 4)
+    timeline.add_damping(0.010, 4)
+
+    # remove damping in the middle
+    timeline.add_damping(0, 10)
+
+    # switch to hearth after 10 seconds
+    timeline.add(G * create_sdf(heart, size, resolution, n=200), 12)
+    timeline.add_spawn(partial(along_field, size=size, v=0.051), 12)
+    timeline.add_damping(0.005, 12)
     
     dots = [Dot(*timeline.spawn(0.0)) for _ in range(N)]
 
     #output_resolution = (400, 400)
     output_resolution = (720, 720)
     surface = cairo.ImageSurface(cairo.Format.ARGB32, *output_resolution)
-    for t in np.arange(0, 30, dt):
+    for t in np.arange(0, 18, dt):
         field = timeline.field(t)
 
         # step
