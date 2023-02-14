@@ -103,14 +103,14 @@ def is_inside(resolution: Tuple[int, int], p: complex):
     return 0 < p.real < width and 0 < p.imag < height
 
 
-def cuniform(size: Tuple[float, float]) -> complex:
+def cuniform(rng: np.random.Generator, size: Tuple[float, float]) -> complex:
     width, height = size    
-    return complex(width * np.random.random(), height * np.random.random())
+    return complex(width * rng.random(), height * rng.random())
 
 
-def random_dot(size: Tuple[float, float], v: float) -> Dot:
+def random_dot(rng: np.random.Generator, size: Tuple[float, float], v: float) -> Dot:
     return Dot(
-        cuniform(size),
+        cuniform(rng, size),
         v * e ** (tau * 1j * np.random.random()),
     )
 
@@ -196,9 +196,8 @@ def field_resolution(field: np.ndarray) -> Tuple[int, int]:
 
 def along_field(rng: np.random.Generator, field: np.ndarray, size: Tuple[float, float], v: float, t: float) -> Tuple[complex, complex]:
     del t
-    #p = cuniform(size)
+    #p = cuniform(rng, size)
     p = to_size(complex(*sample_2d(rng, pdf=as_pdf(field))), size, field_resolution(field))
-    #print(p, field.shape, file=sys.stderr)
     return p, v * -1j * gradient_at(field, size, p)
 
 
@@ -206,7 +205,7 @@ def main():
     path = transform(HEART, 0.50, 100 + 100j)
 
     N = 1024
-    LINE_WIDTH = 0.2
+    LINE_WIDTH = 0.1
     G = 400
     dt = 0.025
     size = (400, 400)
