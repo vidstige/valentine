@@ -2,7 +2,7 @@ from collections import deque
 from functools import partial
 from math import e, tau
 import sys
-from typing import Dict, List, Tuple
+from typing import Callable, Dict, List, Tuple
 
 import cairo
 import numpy as np
@@ -46,6 +46,17 @@ def at(grid: np.ndarray, size: Tuple[float, float], p: complex) -> float:
     x = int(p.imag * grid.shape[0] / size[0])
     y = int(p.real * grid.shape[1] / size[1])
     return grid[x, y]
+
+
+def at_lerp(grid: np.ndarray, size: Tuple[float, float], p: complex) -> float:
+    x0 = int(p.imag * grid.shape[0] / size[0])
+    y0 = int(p.real * grid.shape[1] / size[1])
+    x1, y1 = x0 + 1, y0 + 1
+    g00 = grid[x0, y0]
+    g10 = grid[x1, y0]
+    g11 = grid[x1, y1]
+    g01 = grid[x0, y1]
+    return (g00 + g10 + g11 + g01) / 4
 
 
 def encode_frame(im: np.ndarray) -> bytes:
@@ -141,9 +152,8 @@ def gradient(field: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     return dx, dy
 
 
-def gradient_at(field: np.ndarray, size: Tuple[float, float], p: complex) -> complex:
+def gradient_at(field: np.ndarray, size: Tuple[float, float], p: complex, at: Callable[[np.ndarray, Tuple[float, float], complex], float]=at) -> complex:
     """computes the gradient of a fields as a complex (x + yi) coordinate"""
-    # TODO: cache dx, dy
     dx, dy = gradient(field)
     return at(dx, size, p) + 1j * at(dy, size, p)
 
@@ -172,7 +182,7 @@ def main():
     path = transform(HEART, 0.50, 100 + 100j)
 
     N = 100
-    G = 20
+    G = 200
     dt = 0.025
     size = (400, 400)
     resolution = (800, 800)
@@ -194,12 +204,11 @@ def main():
     for t in np.arange(0, 60, dt):
         # step
         for dot in dots:
-            dv = gradient_at(field, size, dot.position)
-            #dv = at(dx, size, dot.position) + 1j * at(dy, size, dot.position)
+            dv = gradient_at(field, size, dot.position, at=at_lerp)
             dot.update(-dv, dt)
             
             #if not is_inside(resolution, dot.position) or at(inside, size, dot.position):
-            if not is_inside(size, dot.position):
+            if not is_inside((size[0] - 1, size[1] - 1), dot.position):
                 dot.retract()
                 if not dot.trace:
                     dot.respawn(*spawn(np.random.random()))
