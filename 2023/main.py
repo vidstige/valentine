@@ -23,12 +23,10 @@ def create_sdf(path: Path, size: Tuple[float, float], resolution: Tuple[int, int
     x, y = np.meshgrid(
         np.linspace(0, size[0], resolution[0]),
         np.linspace(0, size[1], resolution[1]))
-    center = complex(resolution[0], resolution[1]) * 0.5
     grid = x + 1j * y
     sdf = np.inf * np.ones(resolution)
     for t in np.linspace(0, 1, n):
-        p = path.point(t) * 0.5 + center * 0.5
-        n = -path.normal(t)
+        p = path.point(t)
         d = np.abs(grid - p)
         sdf = np.minimum(sdf, d)
     
@@ -124,7 +122,7 @@ def draw(target: cairo.ImageSurface, dots: List[Dot], color: Color) -> None:
     ctx.set_source_rgb(1, 1, 1)
     
     #r = 3
-    ctx.set_line_width(0.2)
+    ctx.set_line_width(1)
     ctx.set_source_rgb(*color)
     for dot in dots:
         for p in dot.trace:
@@ -174,17 +172,17 @@ def main():
     path = transform(HEART, 0.50, 100 + 100j)
 
     N = 100
-    G = 10000
+    G = 20
     dt = 0.025
     size = (400, 400)
     resolution = (400, 400)
 
-    #sdf = create_sdf(path, (400, 400), resolution, n=100)
-    #field = G * sdf
+    sdf = create_sdf(path, size, resolution, n=100)
+    field = G * sdf
     #inside = create_inside_lookup(path, size, (50, 50))
     
-    rng = np.random.Generator(np.random.PCG64(1337))
-    field = G * generate_perlin_noise_2d(resolution, (5, 5), rng)
+    #rng = np.random.Generator(np.random.PCG64(1337))
+    #field = G * generate_perlin_noise_2d(resolution, (5, 5), rng)
 
     #spawn = partial(on_path, path)
     #spawn = partial(along_line, 0, 1j*size[1], 50)
@@ -200,7 +198,7 @@ def main():
             dot.update(-dv, dt)
             
             #if not is_inside(resolution, dot.position) or at(inside, size, dot.position):
-            if not is_inside(resolution, dot.position):
+            if not is_inside(size, dot.position):
                 dot.retract()
                 if not dot.trace:
                     dot.respawn(*spawn(np.random.random()))
