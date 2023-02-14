@@ -2,7 +2,7 @@ from collections import deque
 from functools import partial
 from math import e, tau
 import sys
-from typing import Callable, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Tuple, TypeVar
 
 import cairo
 import numpy as np
@@ -209,36 +209,43 @@ def along_field(rng: np.random.Generator, field: np.ndarray, size: Tuple[float, 
 
 
 Spawn = Callable[[np.random.Generator, np.ndarray], Tuple[complex, complex]]
+T = TypeVar('T')
 class Timeline:
     def __init__(self, rng: np.random.Generator):
         self.rng = rng
         self.fields = []  # type: List[Tuple[float, np.ndarray]]
         self.spawns = []  # type: List[Tuple[float, Spawn]]
+        self.dampings = []  # type: List[Tuple[float, float]]
+
+    def _first(self, items: List[Tuple[float, T]], t: float) -> T:
+        for start, item in items:
+            if t >= start:
+                return item
+        raise Exception(f'not found for time {t}')
 
     def add(self, field: np.ndarray, t: float) -> None:
         self.fields.append((t, field))
         self.fields.sort(reverse=True)
 
-    def add_spawn(self, spawn: Spawn, t:float) -> None:
+    def add_spawn(self, spawn: Spawn, t: float) -> None:
         self.spawns.append((t, spawn))
         self.spawns.sort(reverse=True)
 
     def field(self, t: float) -> np.ndarray:
         """Returns the vector field at time t"""
-        for start, field in self.fields:
-            if t >= start:            
-                return field
-        raise Exception(f'no field for time {t}')
+        return self._first(self.fields, t)
     
     def spawn(self, t: float) -> Tuple[complex, complex]:
-        for start, spawn in self.spawns:
-            if t >= start:
-                field = self.field(t)
-                return spawn(self.rng, field)
-        raise Exception(f'no spawn for time {t}')
+        spawn = self._first(self.spawns, t)
+        field = self.field(t)
+        return spawn(self.rng, field)
+        
+    def add_damping(self, damping: float, t: float) -> None:
+        self.dampings.append((t, damping))
+        self.dampings.sort(reverse=True)
 
     def damping(self, t: float) -> float:
-        return 0.01
+        return self._first(self.dampings, t)
 
 
 def main():
@@ -253,11 +260,14 @@ def main():
 
     rng = np.random.Generator(np.random.PCG64(1337))
     timeline = Timeline(rng)
-    #timeline.add(G * 5 * generate_perlin_noise_2d(resolution, (5, 5), rng), 0)
-    timeline.add(G * create_sdf(path, size, resolution, n=100), 0)
+    timeline.add(G * 5 * generate_perlin_noise_2d(resolution, (5, 5), rng), 0)
+    timeline.add_spawn(partial(along_line, p0=0, p1=1j*size[1], v=100), 0)
+    timeline.add_damping(0, 0)
 
-    #timeline.add_spawn(partial(along_line, p0=0, p1=1j*size[1], v=100), 0)
-    timeline.add_spawn(partial(along_field, size=size, v=0.051), 0)
+    timeline.add(G * create_sdf(path, size, resolution, n=100), 12)
+    timeline.add_spawn(partial(along_field, size=size, v=0.051), 12)
+    timeline.add_damping(0.005, 12)
+    
     dots = [Dot(*timeline.spawn(0.0)) for _ in range(N)]
 
     output_resolution = (400, 400)
