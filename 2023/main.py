@@ -179,7 +179,7 @@ def sample_2d(rng: np.random.Generator, pdf: np.ndarray):
 def as_pdf(field: np.ndarray):
     lo = np.min(field)
     hi = np.max(field)
-    pdf = hi - (field - lo)  # reverse and move to zero
+    pdf = hi - field  # reverse and move to zero
     return pdf / np.sum(pdf)
 
 
@@ -211,16 +211,16 @@ def main():
     size = (400, 400)
     resolution = (400, 400)
 
-    sdf = create_sdf(path, size, resolution, n=100)
-    field = G * sdf
+    #sdf = create_sdf(path, size, resolution, n=100)
+    #field = G * sdf
     #inside = create_inside_lookup(path, size, (50, 50))
     
     rng = np.random.Generator(np.random.PCG64(1337))
-    #field = G * generate_perlin_noise_2d(resolution, (5, 5), rng)
+    field = G * 5 * generate_perlin_noise_2d(resolution, (5, 5), rng)
 
     #spawn = partial(on_path, path)
-    #spawn = partial(along_line, 0, 1j*size[1], 50)
-    spawn = partial(along_field, rng, field, size, 0.1)
+    spawn = partial(along_line, 0, 1j*size[1], 100)
+    #spawn = partial(along_field, rng, field, size, 0.1)
     dots = [Dot(*spawn(t)) for t in np.random.random(N)]
 
     output_resolution = (400, 400)
@@ -228,7 +228,7 @@ def main():
     for t in np.arange(0, 60, dt):
         # step
         for dot in dots:
-            dv = gradient_at(field, size, dot.position, at=at)
+            dv = gradient_at(field, size, dot.position)
             dot.update(-dv, dt)
             
             #if not is_inside(resolution, dot.position) or at(inside, size, dot.position):
