@@ -265,7 +265,7 @@ def fit_to(path: Path, size: Tuple[float, float], padding_fraction: float=0) -> 
 
 def main():
     N = 1024
-    LINE_WIDTH = 0.25
+    LINE_WIDTH = 0.2
     G = 300
     dt = 0.025
     size = (720, 720)
@@ -278,7 +278,8 @@ def main():
     rng = np.random.Generator(np.random.PCG64(1337))
     timeline = Timeline(rng)
     # start with side-ways lines over perlin field
-    timeline.add(G * 15 * generate_perlin_noise_2d(resolution, (5, 5), rng), 0)
+    perlin_noise = G * 15 * generate_perlin_noise_2d(resolution, (5, 5), rng)
+    timeline.add(perlin_noise, 0)
     timeline.add_spawn(partial(everywhere, size=size, v=200), 0)
     timeline.add_spawn(partial(along_line, p0=0, p1=1j*size[1], v=200), 0.1)
     timeline.add_damping(0, 0)
@@ -296,12 +297,16 @@ def main():
     timeline.add_spawn(partial(along_field, size=size, v=0.051), 12)
     timeline.add_damping(0.005, 12)
     
+    # and finally back to perlin noise
+    timeline.add(perlin_noise, 16)
+
+
     dots = [Dot(*timeline.spawn(0.0)) for _ in range(N)]
 
     #output_resolution = (400, 400)
     output_resolution = (720, 720)
     surface = cairo.ImageSurface(cairo.Format.ARGB32, *output_resolution)
-    for t in np.arange(0, 18, dt):
+    for t in np.arange(0, 20, dt):
         field = timeline.field(t)
 
         # step
