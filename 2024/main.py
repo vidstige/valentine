@@ -7,13 +7,7 @@ from typing import BinaryIO, Callable, Iterable, List, Optional, Tuple, TypeVar
 import cairo
 from PIL import Image, ImageFilter
 
-
-Resolution = Tuple[int, int]
-
-
-def parse_resolution(resolution: str) -> Resolution:
-    width, height = (int(d) for d in resolution.split('x'))
-    return width, height
+from valentine.resolution import Resolution, parse_resolution
 
 
 TAU = 2 * math.pi
