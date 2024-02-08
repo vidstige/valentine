@@ -21,5 +21,8 @@ def zoom_to(points: Sequence[Point], resolution: Resolution, padding: float = 0.
     width, height = resolution
     sx, sy = width / (xmax - xmin), height / (ymax - ymin)
     scale = min(sx, sy)
-    offset = -xmin * scale, -ymin * scale
+    offset = (
+        -xmin * scale + 0.5 * (width - (xmax - xmin) * scale),
+        -ymin * scale + 0.5 * (height - (ymax - ymin) * scale),
+    )
     return Zoom(scale, offset)
