@@ -124,11 +124,9 @@ def main():
     paths = valentine.svg.load('volumental.svg')
     polygons = list(to_polygons(paths))
     points = [p for polygon in polygons for p in polygon]
-    zoom = valentine.zoom.zoom_to(points, RESOLUTION)
-    print(zoom.scale, zoom.offset, file=sys.stderr)
+    zoom = valentine.zoom.zoom_to(points, RESOLUTION, padding=32)
     polygons = [[zoom.transform(p) for p in polygon] for polygon in polygons]
 
-    
     width, height = RESOLUTION
     surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)    
     
