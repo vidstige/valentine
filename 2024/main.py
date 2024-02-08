@@ -11,6 +11,7 @@ import svg.path
 from valentine.resolution import Resolution, parse_resolution
 from valentine.linesegment import Point
 from valentine.polygon import Polygon, split
+import valentine.zoom
 import valentine.svg
 
 
@@ -122,7 +123,11 @@ def to_polygons(path: svg.path.Path) -> Iterable[Polygon]:
 def main():
     paths = valentine.svg.load('volumental.svg')
     polygons = list(to_polygons(paths))
-    #print(polygons, file=sys.stderr)
+    points = [p for polygon in polygons for p in polygon]
+    zoom = valentine.zoom.zoom_to(points, RESOLUTION)
+    print(zoom.scale, zoom.offset, file=sys.stderr)
+    polygons = [[zoom.transform(p) for p in polygon] for polygon in polygons]
+
     
     width, height = RESOLUTION
     surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)    
@@ -130,16 +135,13 @@ def main():
     clear(surface)
     
     ctx = cairo.Context(surface)
-    ctx.scale(4, 4)
-    ctx.translate(0.0, 20.0)
+    #ctx.scale(4, 4)
+    #ctx.set_line_width(2 / 4)
+    #ctx.translate(0.0, 20.0)
     ctx.set_source_rgb(0.8, 0.6, 0.8)
     for polygon in polygons:
-        print('-----', file=sys.stderr)
-        print(polygon, file=sys.stderr)
         draw_polygon(ctx, polygon)
         ctx.stroke()
-
-    
 
     sys.stdout.buffer.write(surface.get_data())
 
