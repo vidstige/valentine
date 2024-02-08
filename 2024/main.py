@@ -2,14 +2,17 @@ import os
 import sys
 import random
 import math
-from typing import BinaryIO, Callable
+from typing import BinaryIO, Callable, Iterable
 
 import cairo
-from PIL import Image, ImageFilter
+from PIL import Image
+import svg.path
 
 from valentine.resolution import Resolution, parse_resolution
 from valentine.linesegment import Point
 from valentine.polygon import Polygon, split
+import valentine.svg
+
 
 TAU = 2 * math.pi
 RESOLUTION = parse_resolution(os.environ.get('RESOLUTION', '720x720'))
@@ -79,9 +82,68 @@ def animate(f: BinaryIO, draw: Callable[[cairo.ImageSurface, float], None], dt: 
         t += dt
 
 
+def is_polygon(path: svg.path.Path) -> bool:
+    return all(isinstance(segment, svg.path.Linear) for segment in path)
+
+
+def to_point(c: complex) -> Point:
+    return c.real, c.imag
+
+
+def split_on_move(path: svg.path.Path) -> Iterable[svg.path.Path]:
+    indices = [-1]
+    for index, segment in enumerate(path):
+        if isinstance(segment, svg.path.Move):
+            indices.append(index)
+    indices.append(len(path))
+
+    for a, b in zip(indices, indices[1:]):
+        # skip empty paths
+        if b - 1 > a + 1:
+            yield svg.path.Path(*path[a + 1:b - 1])
+
+def to_polygons(path: svg.path.Path) -> Iterable[Polygon]:
+    for segment in path:
+        if is_polygon(segment):
+            polygon = []
+            for line in segment:
+                assert isinstance(line, svg.path.Linear)
+                polygon.append(to_point(line.start))
+            yield polygon
+        else:
+            # sample shape at 32 points
+            n = 32
+            for subpath in split_on_move(segment):
+                ts = (i / n for i in range(n))
+                polygon = [to_point(subpath.point(t)) for t in ts]
+                yield polygon
+
+
 def main():
-    animate(sys.stdout.buffer, draw, dt=0.008)
+    paths = valentine.svg.load('volumental.svg')
+    polygons = list(to_polygons(paths))
+    #print(polygons, file=sys.stderr)
     
+    width, height = RESOLUTION
+    surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)    
+    
+    clear(surface)
+    
+    ctx = cairo.Context(surface)
+    ctx.scale(4, 4)
+    ctx.translate(0.0, 20.0)
+    ctx.set_source_rgb(0.8, 0.6, 0.8)
+    for polygon in polygons:
+        print('-----', file=sys.stderr)
+        print(polygon, file=sys.stderr)
+        draw_polygon(ctx, polygon)
+        ctx.stroke()
+
+    
+
+    sys.stdout.buffer.write(surface.get_data())
+
+    #animate(sys.stdout.buffer, draw, dt=0.008)
 
 if __name__ == "__main__":
     main()
