@@ -1,3 +1,4 @@
+from itertools import cycle
 import os
 import sys
 import random
@@ -128,7 +129,7 @@ def main():
     zoom = valentine.zoom.zoom_to(points, RESOLUTION, padding=32)
     polygons = [[zoom.transform(p) for p in polygon] for polygon in polygons]
 
-    lines = tony(RESOLUTION, (5, 5))
+    lines = list(tony(RESOLUTION, (5, 5)))
 
     width, height = RESOLUTION
     surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)    
@@ -136,18 +137,27 @@ def main():
     clear(surface)
     
     ctx = cairo.Context(surface)
-    #ctx.scale(4, 4)
-    #ctx.set_line_width(2 / 4)
-    #ctx.translate(0.0, 20.0)
-    ctx.set_source_rgb(0.8, 0.6, 0.8)
-    for polygon in polygons:
-        draw_polygon(ctx, polygon)
-        ctx.stroke()
 
+    ctx.set_source_rgb(0.4, 0.4, 0.4)
+    ctx.set_dash([10, 5])
     for a, b in lines:
         ctx.move_to(*a)
         ctx.line_to(*b)
         ctx.stroke()
+
+    colors = [
+        (0.6, 0.6, 0.8),
+        (0.8, 0.6, 0.6),
+        (0.6, 0.8, 0.6),
+    ]
+    # cut polygons
+    pieces = cut_all(polygons, lines)
+    ctx.set_dash([])
+    for polygon, color in zip(pieces, cycle(colors)):
+        ctx.set_source_rgb(*color)
+        draw_polygon(ctx, polygon)
+        ctx.fill()
+
 
     sys.stdout.buffer.write(surface.get_data())
 
