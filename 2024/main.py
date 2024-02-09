@@ -13,6 +13,7 @@ from valentine.linesegment import Point
 from valentine.polygon import Polygon, split
 import valentine.zoom
 import valentine.svg
+from valentine.tony import cut_all, tony
 
 
 TAU = 2 * math.pi
@@ -127,6 +128,8 @@ def main():
     zoom = valentine.zoom.zoom_to(points, RESOLUTION, padding=32)
     polygons = [[zoom.transform(p) for p in polygon] for polygon in polygons]
 
+    lines = tony(RESOLUTION, (5, 5))
+
     width, height = RESOLUTION
     surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)    
     
@@ -139,6 +142,11 @@ def main():
     ctx.set_source_rgb(0.8, 0.6, 0.8)
     for polygon in polygons:
         draw_polygon(ctx, polygon)
+        ctx.stroke()
+
+    for a, b in lines:
+        ctx.move_to(*a)
+        ctx.line_to(*b)
         ctx.stroke()
 
     sys.stdout.buffer.write(surface.get_data())
