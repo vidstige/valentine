@@ -29,7 +29,7 @@ def split(polygon: Polygon, linesegment: LineSegment) -> Tuple[List[Polygon], Li
     signed_distances = [cross(lsv, (x - ax, y - ay)) for x, y in polygon]
 
     # all vertices are to the left of the line segment
-    if all(d < 0 for d in signed_distances):
+    if all(d <= 0 for d in signed_distances):
         return [polygon], []
     # all vertices are to the right of the line segment
     if all(d > 0 for d in signed_distances):
@@ -42,8 +42,8 @@ def split(polygon: Polygon, linesegment: LineSegment) -> Tuple[List[Polygon], Li
         vertices.append((pa, False, False))  # not entering nor exiting
 
         # check if segment enters or exits clip area (across line segment)
-        entering = da < 0 and db > 0
-        exiting = da > 0 and db < 0
+        entering = da <= 0 and db > 0
+        exiting = da > 0 and db <= 0
         if entering or exiting:
             # find intersection point i
             i = intersection(linesegment, (pa, pb))
