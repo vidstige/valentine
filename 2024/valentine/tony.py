@@ -12,8 +12,8 @@ def cut_all(polygons: Iterable[Polygon], linesegments: Sequence[LineSegment]) ->
         polygons = []
         for polygon in todo:
             inside, outside = split(polygon, linesegment)
-            todo.extend(inside)
-            todo.extend(outside)
+            polygons.extend(inside)
+            polygons.extend(outside)
         todo = polygons
     return polygons
 
