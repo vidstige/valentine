@@ -61,15 +61,18 @@ def main():
     width, height = RESOLUTION
     surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)    
     
+    # cut polygons
+    
     clear(surface)
     
     ctx = cairo.Context(surface)
 
     ctx.set_source_rgb(0.4, 0.4, 0.4)
     ctx.set_dash([10, 5])
-    for a, b in lines:
-        ctx.move_to(*a)
-        ctx.line_to(*b)
+    for line in lines:
+        ctx.new_path()
+        for x, y in line.coords:
+            ctx.line_to(x, y)
         ctx.stroke()
 
     colors = [
