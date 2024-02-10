@@ -1,7 +1,6 @@
 from itertools import cycle
 import os
 import sys
-import random
 import math
 from typing import BinaryIO, Callable
 
@@ -12,7 +11,7 @@ from shapely import Polygon, transform
 from valentine.resolution import parse_resolution
 import valentine.zoom
 import valentine.svg
-from valentine.tony import cut_all, tony
+from valentine import tony
 
 TAU = 2 * math.pi
 RESOLUTION = parse_resolution(os.environ.get('RESOLUTION', '720x720'))
@@ -56,17 +55,17 @@ def main():
     zoom = valentine.zoom.zoom_to(polygons.bounds, RESOLUTION, padding=32)
     polygons = transform(polygons, zoom.transform)
 
-    lines = list(tony(RESOLUTION, (5, 5)))
+    lines = list(tony.grid(RESOLUTION, (5, 5)))
 
     width, height = RESOLUTION
     surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)    
     
     # cut polygons
-    
-    clear(surface)
-    
-    ctx = cairo.Context(surface)
+    pieces = tony.cut(polygons, lines)
 
+    clear(surface)    
+
+    ctx = cairo.Context(surface)
     ctx.set_source_rgb(0.4, 0.4, 0.4)
     ctx.set_dash([10, 5])
     for line in lines:
@@ -80,7 +79,8 @@ def main():
         (0.8, 0.6, 0.6),
         (0.6, 0.8, 0.6),
     ]
-    for polygon in polygons.geoms:
+    for polygon, color in zip(pieces.geoms, cycle(colors)):
+        ctx.set_source_rgb(*color)
         draw_polygon(ctx, polygon)
         ctx.fill()
 

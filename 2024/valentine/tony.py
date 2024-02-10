@@ -2,25 +2,29 @@
 import random
 from typing import Iterable, Sequence
 
-from shapely import Polygon, LineString
+from shapely import GeometryCollection, MultiPolygon, Polygon, LineString
+from shapely.ops import split
 
 from valentine.resolution import Resolution
 
-
-def cut_all(polygons: Iterable[Polygon], lines: Sequence[LineString]) -> Iterable[Polygon]:
-    todo = polygons
+import sys
+def cut(polygons: MultiPolygon, lines: Sequence[LineString]) -> MultiPolygon:
+    """Cuts a MultiPolygon by lines"""
+    todo = [polygons]
     for line in lines:
-        polygons = []
+        tmp = []
         for polygon in todo:
-            #inside, outside = split(polygon, line)
-            #polygons.extend(inside)
-            #polygons.extend(outside)
-            pass
-        todo = polygons
-    return polygons
+            tmp.extend(split(polygon, line).geoms)
+        
+        #print('todo:', type(tmp[0]), file=sys.stderr)
+        todo = tmp
+
+    #for t in todo:
+    #    print(type(t), file=sys.stderr)
+    return MultiPolygon(todo)
 
 
-def tony(
+def grid(
     resolution: Resolution,
     grid: Resolution,
     value: float = 0.5,
