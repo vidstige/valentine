@@ -9,8 +9,7 @@ import cairo
 from PIL import Image
 from shapely import Polygon, transform
 
-from valentine.resolution import Resolution, parse_resolution
-from valentine.linesegment import Point
+from valentine.resolution import parse_resolution
 import valentine.zoom
 import valentine.svg
 from valentine.tony import cut_all, tony
@@ -28,11 +27,6 @@ def clear(target: cairo.ImageSurface) -> None:
     ctx = cairo.Context(target)
     ctx.set_operator(cairo.OPERATOR_CLEAR)
     ctx.paint()
-
-
-def random_point(resolution: Resolution) -> Point:
-    width, height = resolution
-    return random.random() * width, random.random() * height
 
 
 def draw_polygon(ctx: cairo.Context, polygon: Polygon) -> None:
