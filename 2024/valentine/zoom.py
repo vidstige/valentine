@@ -1,28 +1,30 @@
-from typing import Sequence
+from typing import Tuple
 
-from valentine.linesegment import Point
+import numpy as np
+
 from valentine.resolution import Resolution
 
 
+# xmin, ymin, xmax, ymax
+Bounds = Tuple[float, float, float, float]
+
+
 class Zoom:
-    def __init__(self, scale: float, offset: Point):
+    def __init__(self, scale: float, offset: np.ndarray):
         self.scale = scale
         self.offset = offset
     
-    def transform(self, point: Point) -> Point:
-        x, y = point
-        ox, oy = self.offset
-        return x * self.scale + ox, y * self.scale + oy
+    def transform(self, points: np.ndarray) -> np.ndarray:
+        return points * self.scale + self.offset
 
 
-def zoom_to(points: Sequence[Point], resolution: Resolution, padding: float = 0.0) -> Zoom:
-    xmin, xmax = min(x for x, _ in points), max(x for x, _ in points)
-    ymin, ymax = min(y for _, y in points), max(y for _, y in points)
+def zoom_to(bounds: Bounds, resolution: Resolution, padding: float = 0.0) -> Zoom:
+    xmin, ymin, xmax, ymax = bounds
     width, height = resolution
     sx, sy = (width - padding * 2) / (xmax - xmin), (height - padding * 2) / (ymax - ymin)
     scale = min(sx, sy)
-    offset = (
+    offset = np.array([
         -xmin * scale + 0.5 * (width - (xmax - xmin) * scale),
         -ymin * scale + 0.5 * (height - (ymax - ymin) * scale),
-    )
+    ])
     return Zoom(scale, offset)
