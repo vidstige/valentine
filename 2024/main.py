@@ -75,9 +75,9 @@ def animate(f: BinaryIO, resolution: Resolution, dt: float):
     #polygons = load_svg('volumental.svg')
     polygons = load_svg('heart.svg', resolution)
 
-    # cut polygons
-    lines = list(tony.grid(resolution, (7, 7), value=0.4))
-    pieces = tony.cut(polygons, lines)
+    # cut polygons, first create templates
+    templates = tony.create_templates(resolution, (7, 7), value=0.4)
+    pieces = tony.cut(polygons, templates)
 
     # random order
     polygons = random.sample(list(pieces.geoms), k=len(pieces.geoms))

@@ -1,30 +1,29 @@
 """Splits a set of polygons by cutting lines"""
 import random
-from typing import Iterable, Sequence
+from typing import Dict, Sequence, Tuple
 
-from shapely import GeometryCollection, MultiPolygon, Polygon, LineString
+from shapely import box, MultiPolygon, Polygon, LineString
 from shapely.ops import split
 
 from valentine.resolution import Resolution
 
-import sys
-def cut(polygons: MultiPolygon, lines: Sequence[LineString]) -> MultiPolygon:
-    """Cuts a MultiPolygon by lines"""
+
+def rectangle_for(resolution: Resolution) -> Polygon:
+    width, height = resolution
+    return box(0, 0, width, height)
+
+
+def cut_by_lines(polygons: MultiPolygon, lines: Sequence[LineString]) -> MultiPolygon:
     todo = [polygons]
     for line in lines:
         tmp = []
         for polygon in todo:
             tmp.extend(split(polygon, line).geoms)
-        
-        #print('todo:', type(tmp[0]), file=sys.stderr)
         todo = tmp
-
-    #for t in todo:
-    #    print(type(t), file=sys.stderr)
     return MultiPolygon(todo)
 
 
-def grid(
+def lines(
     resolution: Resolution,
     grid: Resolution,
     value: float = 0.5,
@@ -40,3 +39,18 @@ def grid(
         y0 = height * (gy + 1 + value * (rnd.random() - 0.5)) / (horizontal + 1)
         y1 = height * (gy + 1 + value * (rnd.random() - 0.5)) / (horizontal + 1)
         yield LineString([(0, y0), (width, y1)])
+
+
+def create_templates(
+    resolution: Resolution,
+    grid: Resolution,
+    value: float = 0.5,
+    rnd: random.Random = random,
+) -> MultiPolygon:
+    linesegments = lines(resolution, grid, value, rnd)
+    return cut_by_lines(rectangle_for(resolution), linesegments)
+
+
+def cut(polygons: MultiPolygon, templates: MultiPolygon) -> MultiPolygon:
+    """Cuts a MultiPolygon by lines"""
+    return MultiPolygon([polygons.intersection(template) for template in templates.geoms])
