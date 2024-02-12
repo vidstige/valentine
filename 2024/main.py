@@ -13,6 +13,7 @@ from shapely import Polygon, MultiPolygon, transform
 from valentine.resolution import Resolution, parse_resolution
 import valentine.zoom
 import valentine.svg
+from valentine.tween import Timeline, Linear, Constant, TweenSequence
 from valentine import tony
 
 TAU = 2 * math.pi
@@ -51,14 +52,21 @@ def clamp(t: float, lo: float = 0.0, hi: float = 1.0) -> float:
     return min(max(t, lo), hi)
 
 
-def draw(target: cairo.ImageSurface, polygons: List[Polygon], t: float) -> None:
+def draw(
+    target: cairo.ImageSurface,
+    timeline: Timeline,
+    logo: List[Polygon],
+    heart: List[Polygon],
+    t: float,
+) -> None:
+    assert len(logo) == len(heart)
     eye = cairo.Matrix()
     ctx = cairo.Context(target)
     ctx.set_source_rgb(0.8, 0.8, 0.8)
-    n = len(polygons)
-    for i, polygon in enumerate(polygons):
+    
+    for polygon in heart:
         ctx.set_matrix(eye)
-        y = lerp(-target.get_height(), 0, clamp(t + i / n))
+        y = timeline.tag('heart.y')(t)
         ctx.translate(0, y)
         draw_polygon(ctx, polygon)
         ctx.fill()
@@ -72,28 +80,38 @@ def load_svg(path: str, resolution: Resolution) -> MultiPolygon:
 
 
 def animate(f: BinaryIO, resolution: Resolution, dt: float):        
-    #polygons = load_svg('volumental.svg')
-    polygons = load_svg('heart.svg', resolution)
-
     # cut polygons, first create templates
+    random.seed(1337)
     templates = tony.create_templates(resolution, (7, 7), value=0.4)
-    polygons = tony.cut(polygons, templates)
+
+    logo = tony.cut(load_svg('volumental.svg', resolution), templates)
+    heart = tony.cut(load_svg('heart.svg', resolution), templates)
+
+    # create timeline for pieces
+    timeline = Timeline()
+    timeline.add('heart.y', TweenSequence([
+        Constant(-100, duration=0.5),
+        Linear(-100, 0, duration=0.5),
+        Constant(0, duration=1.0),
+        Linear(0, 100, duration=1.0),
+        Constant(100, duration=2.0),
+    ]))
 
     width, height = resolution
     surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)
 
     t = 0
-    duration = 2
+    duration = timeline.duration()
     while t < duration:
         clear(surface)
-        draw(surface, polygons, t / duration)
+        draw(surface, timeline, logo, heart, t)
         f.write(surface.get_data())
         t += dt
 
 
 def main():
     resolution = parse_resolution(os.environ.get('RESOLUTION', '720x720'))
-    animate(sys.stdout.buffer, resolution, dt=1/90)
+    animate(sys.stdout.buffer, resolution, dt=1/40)
 
 
 if __name__ == "__main__":
