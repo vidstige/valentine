@@ -2,7 +2,8 @@ from itertools import cycle
 import os
 import sys
 import math
-from typing import BinaryIO, Callable
+from textwrap import wrap
+from typing import BinaryIO, Callable, Tuple
 
 import cairo
 from PIL import Image
@@ -15,6 +16,10 @@ from valentine import tony
 
 TAU = 2 * math.pi
 RESOLUTION = parse_resolution(os.environ.get('RESOLUTION', '720x720'))
+
+
+def parse_color(color: str) -> Tuple[float, float, float]:
+    return tuple(int(channel, 16) / 255 for channel in wrap(color.removeprefix('#'), 2))
 
 
 def from_cairo(surface: cairo.ImageSurface) -> Image:
@@ -51,11 +56,12 @@ def animate(f: BinaryIO, draw: Callable[[cairo.ImageSurface, float], None], dt: 
 
 
 def main():
-    polygons = valentine.svg.load('volumental.svg')
+    #polygons = valentine.svg.load('volumental.svg')
+    polygons = valentine.svg.load('heart.svg')
     zoom = valentine.zoom.zoom_to(polygons.bounds, RESOLUTION, padding=32)
     polygons = transform(polygons, zoom.transform)
 
-    lines = list(tony.grid(RESOLUTION, (5, 5)))
+    lines = list(tony.grid(RESOLUTION, (7, 7)))
 
     width, height = RESOLUTION
     surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)    
@@ -74,11 +80,14 @@ def main():
             ctx.line_to(x, y)
         ctx.stroke()
 
-    colors = [
-        (0.6, 0.6, 0.8),
-        (0.8, 0.6, 0.6),
-        (0.6, 0.8, 0.6),
-    ]
+    colors = [parse_color(s) for s in [
+        '#FF9AA2',
+        '#FFB7B2',
+        '#FFDAC1',
+        '#E2F0CB',
+        '#B5EAD7',
+        '#C7CEEA',
+    ]]
     for polygon, color in zip(pieces.geoms, cycle(colors)):
         ctx.set_source_rgb(*color)
         draw_polygon(ctx, polygon)
