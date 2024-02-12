@@ -77,10 +77,7 @@ def animate(f: BinaryIO, resolution: Resolution, dt: float):
 
     # cut polygons, first create templates
     templates = tony.create_templates(resolution, (7, 7), value=0.4)
-    pieces = tony.cut(polygons, templates)
-
-    # random order
-    polygons = random.sample(list(pieces.geoms), k=len(pieces.geoms))
+    polygons = tony.cut(polygons, templates)
 
     width, height = resolution
     surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)

@@ -1,6 +1,6 @@
 """Splits a set of polygons by cutting lines"""
 import random
-from typing import Dict, Sequence, Tuple
+from typing import Dict, List, Sequence, Tuple
 
 from shapely import box, MultiPolygon, Polygon, LineString
 from shapely.ops import split
@@ -51,6 +51,6 @@ def create_templates(
     return cut_by_lines(rectangle_for(resolution), linesegments)
 
 
-def cut(polygons: MultiPolygon, templates: MultiPolygon) -> MultiPolygon:
+def cut(polygons: MultiPolygon, templates: MultiPolygon) -> List[Polygon]:
     """Cuts a MultiPolygon by lines"""
-    return MultiPolygon([polygons.intersection(template) for template in templates.geoms])
+    return [polygons.intersection(template) for template in templates.geoms]
