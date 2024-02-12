@@ -2,6 +2,7 @@ from itertools import cycle
 import os
 import sys
 import math
+import random
 from textwrap import wrap
 from typing import BinaryIO, List, Tuple
 
@@ -42,8 +43,25 @@ def draw_polygon(ctx: cairo.Context, polygon: Polygon) -> None:
     ctx.close_path()
 
 
-def draw(surface: cairo.ImageSurface, pieces: List[Polygon], t: float) -> None:
-    pass
+def lerp(a: float, b: float, t: float) -> float:
+    return (1 - t) * a + t * b
+
+
+def clamp(t: float, lo: float = 0.0, hi: float = 1.0) -> float:
+    return min(max(t, lo), hi)
+
+
+def draw(target: cairo.ImageSurface, polygons: List[Polygon], t: float) -> None:
+    eye = cairo.Matrix()
+    ctx = cairo.Context(target)
+    ctx.set_source_rgb(0.8, 0.8, 0.8)
+    n = len(polygons)
+    for i, polygon in enumerate(polygons):
+        ctx.set_matrix(eye)
+        y = lerp(-target.get_height(), 0, clamp(t + i / n))
+        ctx.translate(0, y)
+        draw_polygon(ctx, polygon)
+        ctx.fill()
 
 
 def load_svg(path: str, resolution: Resolution) -> MultiPolygon:
@@ -61,20 +79,24 @@ def animate(f: BinaryIO, resolution: Resolution, dt: float):
     lines = list(tony.grid(resolution, (7, 7), value=0.4))
     pieces = tony.cut(polygons, lines)
 
+    # random order
+    polygons = random.sample(list(pieces.geoms), k=len(pieces.geoms))
+
     width, height = resolution
     surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)
 
     t = 0
-    while t < 1:
+    duration = 2
+    while t < duration:
         clear(surface)
-        draw(surface, pieces, t)
+        draw(surface, polygons, t / duration)
         f.write(surface.get_data())
         t += dt
 
 
 def main():
     resolution = parse_resolution(os.environ.get('RESOLUTION', '720x720'))
-    animate(sys.stdout.buffer, resolution, dt=0.008)
+    animate(sys.stdout.buffer, resolution, dt=1/90)
 
 
 if __name__ == "__main__":
