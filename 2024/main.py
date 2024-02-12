@@ -92,9 +92,8 @@ def main():
         ctx.set_source_rgb(*color)
         draw_polygon(ctx, polygon)
         ctx.fill()
-
     
-    sys.stdout.buffer.write(surface.get_data())
+    surface.write_to_png('debug.png')
 
     #animate(sys.stdout.buffer, draw, dt=0.008)
 
