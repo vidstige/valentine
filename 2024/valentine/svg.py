@@ -35,7 +35,7 @@ def to_point(c: complex) -> Point:
 
 # todo, sample using tangent gradient rather than hard coded
 def sample_curve(curve: svg.path.Path) -> Iterable[Tuple[float, float]]:
-    n = 32
+    n = 64
     ts = (i / n for i in range(n))
     yield from (to_point(curve.point(t)) for t in ts)
 
