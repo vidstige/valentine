@@ -33,8 +33,10 @@ def grid(
     width, height = resolution
     vertical, horizontal = grid
     for gx in range(vertical):
-        x = width * (gx + 1) / (vertical + 1)
-        yield LineString([(x, 0), (x, height)])
+        x0 = width * (gx + 1 + value * (rnd.random() - 0.5)) / (vertical + 1)
+        x1 = width * (gx + 1 + value * (rnd.random() - 0.5)) / (vertical + 1)
+        yield LineString([(x0, 0), (x1, height)])
     for gy in range(horizontal):
-        y = height * (gy + 1) / (horizontal + 1)
-        yield LineString([(0, y), (width, y)])
+        y0 = height * (gy + 1 + value * (rnd.random() - 0.5)) / (horizontal + 1)
+        y1 = height * (gy + 1 + value * (rnd.random() - 0.5)) / (horizontal + 1)
+        yield LineString([(0, y0), (width, y1)])

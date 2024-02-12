@@ -61,7 +61,7 @@ def main():
     zoom = valentine.zoom.zoom_to(polygons.bounds, RESOLUTION, padding=32)
     polygons = transform(polygons, zoom.transform)
 
-    lines = list(tony.grid(RESOLUTION, (7, 7)))
+    lines = list(tony.grid(RESOLUTION, (7, 7), value=0.4))
 
     width, height = RESOLUTION
     surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)    
