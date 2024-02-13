@@ -69,18 +69,25 @@ def draw(
     
     for phase, logo_piece, heart_piece in zip(phases, logo, heart):
         # draw heart piece
-        ctx.set_matrix(eye)
-        y = timeline.tag('heart.y')((t + phase) % timeline.duration())
-        ctx.translate(0, y)
-        draw_polygon(ctx, heart_piece)
-        ctx.fill()
+        if not heart_piece.is_empty:
+            y = timeline.tag('heart.y')((t + phase * 3) % timeline.duration())
+            ctx.set_matrix(eye)
+            ctx.translate(0, y)
+            # rotate around center
+            center = heart_piece.centroid
+            ctx.translate(center.x, center.y)
+            ctx.rotate(y / 200)
+            ctx.translate(-center.x, -center.y)
+            draw_polygon(ctx, heart_piece)
+            ctx.fill()
 
         # draw logo piece
-        ctx.set_matrix(eye)
-        y = timeline.tag('logo.y')((t + phase) % timeline.duration())
-        ctx.translate(0, y)
-        draw_polygon(ctx, logo_piece)
-        ctx.fill()
+        if not logo_piece.is_empty:
+            ctx.set_matrix(eye)
+            y = timeline.tag('logo.y')((t + phase * 3) % timeline.duration())
+            ctx.translate(0, y)
+            draw_polygon(ctx, logo_piece)
+            ctx.fill()
 
 
 def load_svg(path: str, resolution: Resolution) -> MultiPolygon:
@@ -133,7 +140,7 @@ def animate(f: BinaryIO, resolution: Resolution, dt: float):
     ]))
 
     # phases
-    phases = [random.random() * 3 for _ in range(tony.area(grid))]
+    phases = [random.random() for _ in range(tony.area(grid))]
 
     width, height = resolution
     surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)
