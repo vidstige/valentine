@@ -10,7 +10,6 @@ class Tween(ABC):
         pass
 
 
-
 class Linear(Tween):
     def __init__(self, start: float, stop: float, duration: float = 1) -> None:
         self.start = start
@@ -40,9 +39,10 @@ class TweenSequence(Tween):
         start = 0
         for tween in self.tweens:
             if t >= start and t < tween.duration + start:
-                return tween, start
+                #return tween, start
+                break
             start += tween.duration
-        raise ValueError(f'Bad time {t}')
+        return tween, start
 
     def __call__(self, t: float) -> float:
         # find correct tween

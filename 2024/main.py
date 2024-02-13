@@ -1,4 +1,4 @@
-from itertools import cycle
+from itertools import count, cycle
 import os
 import sys
 import math
@@ -55,6 +55,7 @@ def clamp(t: float, lo: float = 0.0, hi: float = 1.0) -> float:
 def draw(
     target: cairo.ImageSurface,
     timeline: Timeline,
+    phases: List[float],
     logo: List[Polygon],
     heart: List[Polygon],
     t: float,
@@ -64,11 +65,19 @@ def draw(
     ctx = cairo.Context(target)
     ctx.set_source_rgb(0.8, 0.8, 0.8)
     
-    for polygon in heart:
+    for phase, logo_piece, heart_piece in zip(phases, logo, heart):
+        # draw heart piece
         ctx.set_matrix(eye)
-        y = timeline.tag('heart.y')(t)
+        y = timeline.tag('heart.y')((t + phase) % timeline.duration())
         ctx.translate(0, y)
-        draw_polygon(ctx, polygon)
+        draw_polygon(ctx, heart_piece)
+        ctx.fill()
+
+        # draw logo piece
+        ctx.set_matrix(eye)
+        y = timeline.tag('logo.y')((t + phase) % timeline.duration())
+        ctx.translate(0, y)
+        draw_polygon(ctx, logo_piece)
         ctx.fill()
 
 
@@ -89,22 +98,35 @@ def animate(f: BinaryIO, resolution: Resolution, dt: float):
 
     # create timeline for pieces
     timeline = Timeline()
+    _, height = resolution
     timeline.add('heart.y', TweenSequence([
-        Constant(-100, duration=0.5),
-        Linear(-100, 0, duration=0.5),
-        Constant(0, duration=1.0),
-        Linear(0, 100, duration=1.0),
-        Constant(100, duration=2.0),
+        Constant(-height, duration=4.0),
+        Linear(-height, 0, duration=0.20),
+        Constant(0, duration=3.0),
+        Linear(0, height, duration=0.8),
+        Constant(height, duration=2.0),
     ]))
+    heart_duration = timeline.tag('heart.y').duration()
+    timeline.add('logo.y', TweenSequence([
+        Constant(-height, duration=0.75 * heart_duration),
+        Linear(-height, 0, duration=0.20),
+        Constant(0, duration=4.0),
+        Linear(0, height, duration=0.8),
+        Constant(height, duration=0.5),
+    ]))
+
+    # phases
+    phases = [random.random() * 4 for _ in range(8 * 8)]
 
     width, height = resolution
     surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)
 
     t = 0
     duration = timeline.duration()
+    print(duration, file=sys.stderr)
     while t < duration:
         clear(surface)
-        draw(surface, timeline, logo, heart, t)
+        draw(surface, timeline, phases, logo, heart, t)
         f.write(surface.get_data())
         t += dt
 
