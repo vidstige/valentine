@@ -91,7 +91,8 @@ def load_svg(path: str, resolution: Resolution) -> MultiPolygon:
 def animate(f: BinaryIO, resolution: Resolution, dt: float):        
     # cut polygons, first create templates
     random.seed(1337)
-    templates = tony.create_templates(resolution, (7, 7), value=0.4)
+    grid = (7, 7)
+    templates = tony.create_templates(resolution, grid, value=0.4)
 
     logo = tony.cut(load_svg('volumental.svg', resolution), templates)
     heart = tony.cut(load_svg('heart.svg', resolution), templates)
@@ -110,20 +111,19 @@ def animate(f: BinaryIO, resolution: Resolution, dt: float):
     timeline.add('logo.y', TweenSequence([
         Constant(-height, duration=0.75 * heart_duration),
         Linear(-height, 0, duration=0.20),
-        Constant(0, duration=4.0),
+        Constant(0, duration=3.0),
         Linear(0, height, duration=0.8),
         Constant(height, duration=0.5),
     ]))
 
     # phases
-    phases = [random.random() * 4 for _ in range(8 * 8)]
+    phases = [random.random() * 3 for _ in range(tony.area(grid))]
 
     width, height = resolution
     surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)
 
     t = 0
     duration = timeline.duration()
-    print(duration, file=sys.stderr)
     while t < duration:
         clear(surface)
         draw(surface, timeline, phases, logo, heart, t)

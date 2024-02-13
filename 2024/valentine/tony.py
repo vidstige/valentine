@@ -54,3 +54,8 @@ def create_templates(
 def cut(polygons: MultiPolygon, templates: MultiPolygon) -> List[Polygon]:
     """Cuts a MultiPolygon by lines"""
     return [polygons.intersection(template) for template in templates.geoms]
+
+
+def area(resolution: Resolution) -> int:
+    width, height = resolution
+    return (width + 1) * (height + 1)
