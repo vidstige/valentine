@@ -2,7 +2,7 @@ import os
 import sys
 import math
 import random
-from typing import BinaryIO, Iterable, List, Optional
+from typing import BinaryIO, Iterable, List, Optional, Union
 
 import cairo
 import numpy as np
@@ -36,7 +36,12 @@ def clear(target: cairo.ImageSurface, background: Optional[cairo.Pattern]) -> No
     ctx.paint()
 
 
-def draw_polygon(ctx: cairo.Context, polygon: Polygon) -> None:
+def draw_polygon(ctx: cairo.Context, polygon: Union[Polygon, MultiPolygon]) -> None:
+    if isinstance(polygon, MultiPolygon):
+        for p in polygon.geoms:
+            draw_polygon(ctx, p)
+        return
+
     ctx.new_path()
     for x, y in polygon.exterior.coords:
         ctx.line_to(x, y)
@@ -114,7 +119,7 @@ def draw(
 def load_svg(path: str, resolution: Resolution) -> MultiPolygon:
     """Loads path, converts to polygon(s) and translates/scales to resolution"""
     polygons = valentine.svg.load(path)
-    zoom = valentine.zoom.zoom_to(polygons.bounds, resolution, padding=32)
+    zoom = valentine.zoom.zoom_to(polygons.bounds, resolution, padding=64)
     return transform(polygons, zoom.transform)
 
 
@@ -134,9 +139,9 @@ def motion_blur(frames: Iterable[np.ndarray]) -> np.ndarray:
 
 def animate(f: BinaryIO, resolution: Resolution, dt: float):        
     # cut polygons, first create templates
-    random.seed(1337)
+    random.seed(0xdeadbeef9)
     grid = (7, 7)
-    templates = tony.create_templates(resolution, grid, value=0.4)
+    templates = tony.create_templates(resolution, grid, value=0.6)
 
     logo = tony.cut(load_svg('volumental.svg', resolution), templates)
     heart = tony.cut(load_svg('heart.svg', resolution), templates)
@@ -147,7 +152,7 @@ def animate(f: BinaryIO, resolution: Resolution, dt: float):
     timeline.add('heart.y', TweenSequence([
         Constant(-height, duration=3.0),
         EaseInQuad(-height, 0, duration=0.50),
-        Constant(0, duration=3.0),
+        Constant(0, duration=3.5),
         EaseOutQuad(0, height, duration=0.8),
         Constant(height, duration=2.0),
     ]))
@@ -155,7 +160,7 @@ def animate(f: BinaryIO, resolution: Resolution, dt: float):
     timeline.add('logo.y', TweenSequence([
         Constant(-height, duration=0.75 * heart_duration),
         EaseInQuad(-height, 0, duration=0.50),
-        Constant(0, duration=3.0),
+        Constant(0, duration=3.5),
         EaseOutQuad(0, height, duration=0.8),
         Constant(height, duration=0.2),
     ]))
