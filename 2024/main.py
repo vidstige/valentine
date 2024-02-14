@@ -5,7 +5,7 @@ import sys
 import math
 import random
 from textwrap import wrap
-from typing import BinaryIO, Iterable, List, Tuple
+from typing import BinaryIO, Iterable, List, Optional, Tuple
 
 import cairo
 import numpy as np
@@ -30,9 +30,12 @@ def from_cairo(surface: cairo.ImageSurface) -> Image:
     return Image.frombuffer('RGBA', (surface.get_width(), surface.get_height()), bytes(surface.get_data()), 'raw')
 
 
-def clear(target: cairo.ImageSurface) -> None:
+def clear(target: cairo.ImageSurface, background: Optional[cairo.Pattern]) -> None:
     ctx = cairo.Context(target)
-    ctx.set_operator(cairo.OPERATOR_CLEAR)
+    if background:
+        ctx.set_source(background)
+    else:
+        ctx.set_operator(cairo.OPERATOR_CLEAR)
     ctx.paint()
 
 
@@ -71,6 +74,7 @@ def draw(
     gradient.add_color_stop_rgb(0, *parse_color('#ec008c'))
     gradient.add_color_stop_rgb(1, *parse_color('#fc6767'))
     ctx.set_source(gradient)
+
     for phase, logo_piece, heart_piece in zip(phases, logo, heart):
         # draw heart piece
         if not heart_piece.is_empty:
@@ -149,10 +153,15 @@ def animate(f: BinaryIO, resolution: Resolution, dt: float):
     width, height = resolution
     surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)
 
+    # https://uigradients.com/#Clouds
+    background = cairo.LinearGradient(0, 0, 0, 720)
+    background.add_color_stop_rgb(0, *parse_color('#ECE9E6'))
+    background.add_color_stop_rgb(1, *parse_color('#FFFFFF'))
+
     t = 0
     duration = timeline.duration()
     while t < duration:
-        clear(surface)
+        clear(surface, background)
         #frames = []
         #for i in range(8):
         #    draw(surface, timeline, phases, logo, heart, t - i * dt * 0.2)
