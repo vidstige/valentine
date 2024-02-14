@@ -65,11 +65,17 @@ def draw(
     assert len(logo) == len(heart)
     eye = cairo.Matrix()
     ctx = cairo.Context(target)
-    #ctx.set_source_rgb(0.8, 0.8, 0.8)
     ctx.set_source(foreground)
 
-    for rng, logo_piece, heart_piece in zip(rngs, logo, heart):
+    # compute camera shake
+    shake = 0
+    for rng in rngs:
         phase = rng * 3
+        shake += timeline.tag('shake')(t + phase)
+
+    for rng, logo_piece, heart_piece in zip(rngs, logo, heart):        
+        phase = rng * 3
+
         # draw heart piece
         if not heart_piece.is_empty:
             y = timeline.tag('heart.y')((t + phase) % timeline.duration())
@@ -140,6 +146,12 @@ def animate(f: BinaryIO, resolution: Resolution, dt: float):
         EaseOutQuad(0, height, duration=0.8),
         Constant(height, duration=0.5),
     ]))
+    timeline.add('shake', TweenSequence([
+        Constant(0, duration=3 + 0.5), # don't shake until first two tweens are done
+        Constant(1, duration=dt * 2),  # shake for n frames
+        Constant(0, duration=1),  #  and don't shake for the rest (duration is ignored on last tween)
+    ]))
+    
 
     # each location has a random value called "rng" for it's properties
     rngs = [random.random() for _ in range(tony.area(grid))]
