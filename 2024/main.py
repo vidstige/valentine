@@ -112,6 +112,12 @@ def draw(
             ctx.set_matrix(camera)
             y = timeline.tag('logo.y')((t + phase(rng)) % timeline.duration())
             ctx.translate(0, y)
+            # rotate around center
+            center = logo_piece.centroid
+            ctx.translate(center.x, center.y)
+            ctx.rotate(-y / 200)
+            ctx.translate(-center.x, -center.y)
+
             draw_polygon(ctx, logo_piece)
             ctx.fill()
 
@@ -153,7 +159,7 @@ def animate(f: BinaryIO, resolution: Resolution, dt: float):
         Constant(-height, duration=3.0),
         EaseInQuad(-height, 0, duration=0.50),
         Constant(0, duration=3.5),
-        EaseOutQuad(0, height, duration=0.8),
+        EaseOutQuad(0, height, duration=0.5),
         Constant(height, duration=2.0),
     ]))
     heart_duration = timeline.tag('heart.y').duration()
@@ -161,8 +167,7 @@ def animate(f: BinaryIO, resolution: Resolution, dt: float):
         Constant(-height, duration=0.75 * heart_duration),
         EaseInQuad(-height, 0, duration=0.50),
         Constant(0, duration=3.5),
-        EaseOutQuad(0, height, duration=0.8),
-        Constant(height, duration=0.2),
+        EaseOutQuad(0, height, duration=0.5),
     ]))
     timeline.add('heart.shake', TweenSequence([
         Constant(0, duration=3 + 0.5), # don't shake until first two tweens are done

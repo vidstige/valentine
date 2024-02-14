@@ -12,7 +12,7 @@ def parse_color(color: str) -> Tuple[float, float, float]:
 
 def gradient(resolution: Resolution, stops: Sequence[str]) -> cairo.Pattern:
     width, height = resolution
-    gradient = cairo.LinearGradient(0, 0, width, height)
+    gradient = cairo.LinearGradient(width/2, 0, width/2, height)
     n = len(stops)
     for i, color in enumerate(stops):
         offset = i / (n - 1)
