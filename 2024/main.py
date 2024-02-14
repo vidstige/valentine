@@ -53,6 +53,11 @@ def clamp(t: float, lo: float = 0.0, hi: float = 1.0) -> float:
     return min(max(t, lo), hi)
 
 
+def phase(rng: float) -> float:
+    """Computes phase for location"""
+    return rng * 3
+
+
 def draw(
     target: cairo.ImageSurface,
     foreground: cairo.Pattern,
@@ -68,25 +73,20 @@ def draw(
     ctx.set_source(foreground)
 
     # compute camera shake amplitude
-    amplitude = 0
-    for rng in rngs:
-        phase = rng * 3
-        amplitude += timeline.tag('shake')(t + phase)
-    amplitude *= 0.5
+    amplitude = 1.5 * sum(timeline.tag('shake')(t + phase(rng)) for rng in rngs)
     # use time as shake phase
     theta = t * 1337
-    camera.translate(math.cos(theta) * amplitude, math.sin(theta) * amplitude)
+    
     camera.translate(target.get_width() / 2, target.get_height() / 2)
+    camera.translate(math.cos(theta) * amplitude, math.sin(theta) * amplitude)
     camera.rotate(math.sin(amplitude) * 0.01)
     camera.translate(-target.get_width() / 2, -target.get_height() / 2)
 
 
-    for rng, logo_piece, heart_piece in zip(rngs, logo, heart):        
-        phase = rng * 3
-
+    for rng, logo_piece, heart_piece in zip(rngs, logo, heart):
         # draw heart piece
         if not heart_piece.is_empty:
-            y = timeline.tag('heart.y')((t + phase) % timeline.duration())
+            y = timeline.tag('heart.y')((t + phase(rng)) % timeline.duration())
             ctx.set_matrix(camera)
             ctx.translate(0, y)
             # rotate around center
@@ -101,7 +101,7 @@ def draw(
         # draw logo piece
         if not logo_piece.is_empty:
             ctx.set_matrix(camera)
-            y = timeline.tag('logo.y')((t + phase) % timeline.duration())
+            y = timeline.tag('logo.y')((t + phase(rng)) % timeline.duration())
             ctx.translate(0, y)
             draw_polygon(ctx, logo_piece)
             ctx.fill()
