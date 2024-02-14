@@ -4,14 +4,14 @@ import os
 import sys
 import math
 import random
-from textwrap import wrap
-from typing import BinaryIO, Iterable, List, Optional, Tuple
+from typing import BinaryIO, Iterable, List, Optional
 
 import cairo
 import numpy as np
 from PIL import Image
 from shapely import Polygon, MultiPolygon, transform
 
+from valentine.color import parse_color
 from valentine.resolution import Resolution, parse_resolution
 import valentine.zoom
 import valentine.svg
@@ -19,10 +19,6 @@ from valentine.tween import EaseInQuad, EaseOutQuad, Timeline, Linear, Constant,
 from valentine import tony
 
 TAU = 2 * math.pi
-
-
-def parse_color(color: str) -> Tuple[float, float, float]:
-    return tuple(int(channel, 16) / 255 for channel in wrap(color.removeprefix('#'), 2))
 
 
 def from_cairo(surface: cairo.ImageSurface) -> Image:
