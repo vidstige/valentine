@@ -52,10 +52,11 @@ def lerp(a: float, b: float, t: float) -> float:
 def clamp(t: float, lo: float = 0.0, hi: float = 1.0) -> float:
     return min(max(t, lo), hi)
 
+from valentine.tween.tweens import ease_in_quad
 
 def phase(rng: float) -> float:
     """Computes phase for location"""
-    return rng * 3
+    return ease_in_quad(rng) * 3
 
 
 def draw(
@@ -73,7 +74,9 @@ def draw(
     ctx.set_source(foreground)
 
     # compute camera shake amplitude
-    amplitude = 1.5 * sum(timeline.tag('shake')(t + phase(rng)) for rng in rngs)
+    heart_amplitude = sum(timeline.tag('heart.shake')(t + phase(rng)) for rng in rngs)
+    logo_amplitude = sum(timeline.tag('logo.shake')(t + phase(rng)) for rng in rngs)
+    amplitude = 1.5 * (heart_amplitude + logo_amplitude)
     # use time as shake phase
     theta = t * 1337
     
@@ -93,7 +96,6 @@ def draw(
             ctx.translate(center.x, center.y)
             ctx.rotate(y / 200)
             ctx.translate(-center.x, -center.y)
-                        
             draw_polygon(ctx, heart_piece)
             ctx.fill()
 
@@ -152,14 +154,18 @@ def animate(f: BinaryIO, resolution: Resolution, dt: float):
         EaseInQuad(-height, 0, duration=0.50),
         Constant(0, duration=3.0),
         EaseOutQuad(0, height, duration=0.8),
-        Constant(height, duration=0.5),
+        Constant(height, duration=0.2),
     ]))
-    timeline.add('shake', TweenSequence([
+    timeline.add('heart.shake', TweenSequence([
         Constant(0, duration=3 + 0.5), # don't shake until first two tweens are done
-        Linear(1, 0, duration=dt * 5),  # shake for n frames
-        Constant(0, duration=1),  #  and don't shake for the rest (duration is ignored on last tween)
+        EaseInQuad(1, 0, duration=dt * 3),  # shake for n frames
+        Constant(0, duration=1),
     ]))
-    
+    timeline.add('logo.shake', TweenSequence([
+        Constant(0, duration=0.75 * heart_duration + 0.5),  # wait until logo starts falling
+        EaseInQuad(1, 0, duration=dt * 3),  # shake for n frames
+        Constant(0, duration=1),
+    ]))
 
     # each location has a random value called "rng" for it's properties
     rngs = [random.random() for _ in range(tony.area(grid))]
@@ -168,8 +174,8 @@ def animate(f: BinaryIO, resolution: Resolution, dt: float):
     surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)
 
     # foreground
-    # https://uigradients.com/#DIMIGO
-    foreground = color.gradient(resolution, ['#ec008c', '#fc6767'])
+    # https://uigradients.com/#PurpleLove
+    foreground = color.gradient(resolution, ['#cc2b5e', '#753a88'])
 
     # https://uigradients.com/#Clouds
     background = color.gradient(resolution, ['#ECE9E6', '#FFFFFF'])
