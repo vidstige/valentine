@@ -79,9 +79,8 @@ def draw(
     
     camera.translate(target.get_width() / 2, target.get_height() / 2)
     camera.translate(math.cos(theta) * amplitude, math.sin(theta) * amplitude)
-    camera.rotate(math.sin(amplitude) * 0.01)
+    camera.rotate(math.sin(amplitude*100) * 0.01)
     camera.translate(-target.get_width() / 2, -target.get_height() / 2)
-
 
     for rng, logo_piece, heart_piece in zip(rngs, logo, heart):
         # draw heart piece
@@ -157,7 +156,7 @@ def animate(f: BinaryIO, resolution: Resolution, dt: float):
     ]))
     timeline.add('shake', TweenSequence([
         Constant(0, duration=3 + 0.5), # don't shake until first two tweens are done
-        Constant(1, duration=dt * 2),  # shake for n frames
+        Linear(1, 0, duration=dt * 5),  # shake for n frames
         Constant(0, duration=1),  #  and don't shake for the rest (duration is ignored on last tween)
     ]))
     
