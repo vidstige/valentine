@@ -1,5 +1,3 @@
-from collections import deque
-from itertools import count, cycle
 import os
 import sys
 import math
@@ -18,7 +16,10 @@ import valentine.svg
 from valentine.tween import EaseInQuad, EaseOutQuad, Timeline, Linear, Constant, TweenSequence
 from valentine import tony
 
+
 TAU = 2 * math.pi
+#MOTION_BLUR = {'n': 8, 'dt': 0.05*1/60}
+MOTION_BLUR = {'n': 1, 'dt': 0.05*1/60}
 
 
 def from_cairo(surface: cairo.ImageSurface) -> Image:
@@ -73,9 +74,11 @@ def draw(
     ctx = cairo.Context(target)
     ctx.set_source(foreground)
 
+    area = np.mean([geom.area for geom in logo + heart if not geom.is_empty])
+        
     # compute camera shake amplitude
-    heart_amplitude = sum(timeline.tag('heart.shake')(t + phase(rng)) for rng in rngs)
-    logo_amplitude = sum(timeline.tag('logo.shake')(t + phase(rng)) for rng in rngs)
+    heart_amplitude = sum(polygon.area * timeline.tag('heart.shake')(t + phase(rng)) / area for rng, polygon in zip(rngs, heart))
+    logo_amplitude = sum(polygon.area * timeline.tag('logo.shake')(t + phase(rng)) / area for rng, polygon in zip(rngs, logo))
     amplitude = 1.5 * (heart_amplitude + logo_amplitude)
     # use time as shake phase
     theta = t * 1337
@@ -189,14 +192,15 @@ def animate(f: BinaryIO, resolution: Resolution, dt: float):
     duration = timeline.duration()
     while t < duration:
         clear(surface, background)
-        #frames = []
-        #for i in range(8):
-        #    draw(surface, timeline, phases, logo, heart, t - i * dt * 0.2)
-        #    frames.append(as_array(surface))
-        #buffer = motion_blur(frames).tobytes()
+        frames = []
+        for i in range(MOTION_BLUR['n']):
+            draw(surface, foreground, timeline, rngs, logo, heart, t - i * MOTION_BLUR['dt'])
+            frames.append(as_array(surface))
+        buffer = motion_blur(frames).tobytes()
         
-        draw(surface, foreground, timeline, rngs, logo, heart, t)
-        buffer = surface.get_data()
+        #draw(surface, foreground, timeline, rngs, logo, heart, t)
+        #buffer = surface.get_data()
+    
         f.write(buffer)
         t += dt
 
