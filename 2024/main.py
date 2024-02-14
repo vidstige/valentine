@@ -65,7 +65,12 @@ def draw(
     assert len(logo) == len(heart)
     eye = cairo.Matrix()
     ctx = cairo.Context(target)
-    ctx.set_source_rgb(0.8, 0.8, 0.8)
+    #ctx.set_source_rgb(0.8, 0.8, 0.8)
+    # https://uigradients.com/#DIMIGO
+    gradient = cairo.LinearGradient(0, 0, 0, 720)
+    gradient.add_color_stop_rgb(0, *parse_color('#ec008c'))
+    gradient.add_color_stop_rgb(1, *parse_color('#fc6767'))
+    ctx.set_source(gradient)
     for phase, logo_piece, heart_piece in zip(phases, logo, heart):
         # draw heart piece
         if not heart_piece.is_empty:
