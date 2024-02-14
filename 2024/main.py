@@ -15,7 +15,7 @@ from shapely import Polygon, MultiPolygon, transform
 from valentine.resolution import Resolution, parse_resolution
 import valentine.zoom
 import valentine.svg
-from valentine.tween import Timeline, Linear, Constant, TweenSequence
+from valentine.tween import EaseInQuad, EaseOutQuad, Timeline, Linear, Constant, TweenSequence
 from valentine import tony
 
 TAU = 2 * math.pi
@@ -66,7 +66,6 @@ def draw(
     eye = cairo.Matrix()
     ctx = cairo.Context(target)
     ctx.set_source_rgb(0.8, 0.8, 0.8)
-    
     for phase, logo_piece, heart_piece in zip(phases, logo, heart):
         # draw heart piece
         if not heart_piece.is_empty:
@@ -125,17 +124,17 @@ def animate(f: BinaryIO, resolution: Resolution, dt: float):
     _, height = resolution
     timeline.add('heart.y', TweenSequence([
         Constant(-height, duration=3.0),
-        Linear(-height, 0, duration=0.50),
+        EaseInQuad(-height, 0, duration=0.50),
         Constant(0, duration=3.0),
-        Linear(0, height, duration=0.8),
+        EaseOutQuad(0, height, duration=0.8),
         Constant(height, duration=2.0),
     ]))
     heart_duration = timeline.tag('heart.y').duration()
     timeline.add('logo.y', TweenSequence([
         Constant(-height, duration=0.75 * heart_duration),
-        Linear(-height, 0, duration=0.50),
+        EaseInQuad(-height, 0, duration=0.50),
         Constant(0, duration=3.0),
-        Linear(0, height, duration=0.8),
+        EaseOutQuad(0, height, duration=0.8),
         Constant(height, duration=0.5),
     ]))
 

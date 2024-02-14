@@ -21,6 +21,29 @@ class Linear(Tween):
         return (1 - nt) * self.start + nt * self.stop
 
 
+class EaseInQuad(Tween):
+    def __init__(self, start: float, stop: float, duration: float = 1) -> None:
+        self.start = start
+        self.stop = stop
+        self.duration = duration
+
+    def __call__(self, t: float) -> float:
+        nt = t / self.duration
+        return (1 - nt*nt) * self.start + nt*nt * self.stop
+
+
+class EaseOutQuad(Tween):
+    def __init__(self, start: float, stop: float, duration: float = 1) -> None:
+        self.start = start
+        self.stop = stop
+        self.duration = duration
+
+    def __call__(self, t: float) -> float:
+        nt = t / self.duration
+        tmp = -nt * (t - 2)
+        return (1 - tmp) * self.start + tmp * self.stop
+
+
 class Constant(Tween):
     def __init__(self, value: float, duration = 1) -> None:
         self.value = value
