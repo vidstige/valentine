@@ -67,11 +67,19 @@ def draw(
     ctx = cairo.Context(target)
     ctx.set_source(foreground)
 
-    # compute camera shake
-    shake = 0
+    # compute camera shake amplitude
+    amplitude = 0
     for rng in rngs:
         phase = rng * 3
-        shake += timeline.tag('shake')(t + phase)
+        amplitude += timeline.tag('shake')(t + phase)
+    amplitude *= 0.5
+    # use time as shake phase
+    theta = t * 1337
+    camera.translate(math.cos(theta) * amplitude, math.sin(theta) * amplitude)
+    camera.translate(target.get_width() / 2, target.get_height() / 2)
+    camera.rotate(math.sin(amplitude) * 0.01)
+    camera.translate(-target.get_width() / 2, -target.get_height() / 2)
+
 
     for rng, logo_piece, heart_piece in zip(rngs, logo, heart):        
         phase = rng * 3
@@ -86,6 +94,7 @@ def draw(
             ctx.translate(center.x, center.y)
             ctx.rotate(y / 200)
             ctx.translate(-center.x, -center.y)
+                        
             draw_polygon(ctx, heart_piece)
             ctx.fill()
 
