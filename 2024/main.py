@@ -11,7 +11,7 @@ import numpy as np
 from PIL import Image
 from shapely import Polygon, MultiPolygon, transform
 
-from valentine.color import parse_color
+from valentine import color
 from valentine.resolution import Resolution, parse_resolution
 import valentine.zoom
 import valentine.svg
@@ -55,6 +55,7 @@ def clamp(t: float, lo: float = 0.0, hi: float = 1.0) -> float:
 
 def draw(
     target: cairo.ImageSurface,
+    foreground: cairo.Pattern,
     timeline: Timeline,
     phases: List[float],
     logo: List[Polygon],
@@ -65,11 +66,7 @@ def draw(
     eye = cairo.Matrix()
     ctx = cairo.Context(target)
     #ctx.set_source_rgb(0.8, 0.8, 0.8)
-    # https://uigradients.com/#DIMIGO
-    gradient = cairo.LinearGradient(0, 0, 0, 720)
-    gradient.add_color_stop_rgb(0, *parse_color('#ec008c'))
-    gradient.add_color_stop_rgb(1, *parse_color('#fc6767'))
-    ctx.set_source(gradient)
+    ctx.set_source(foreground)
 
     for phase, logo_piece, heart_piece in zip(phases, logo, heart):
         # draw heart piece
@@ -149,14 +146,16 @@ def animate(f: BinaryIO, resolution: Resolution, dt: float):
     width, height = resolution
     surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)
 
+    # foreground
+    # https://uigradients.com/#DIMIGO
+    foreground = color.gradient(resolution, ['#ec008c', '#fc6767'])
+
     # https://uigradients.com/#Clouds
-    background = cairo.LinearGradient(0, 0, 0, 720)
-    background.add_color_stop_rgb(0, *parse_color('#ECE9E6'))
-    background.add_color_stop_rgb(1, *parse_color('#FFFFFF'))
+    background = color.gradient(resolution, ['#ECE9E6', '#FFFFFF'])
 
     # thumb
     #clear(surface, background)
-    #draw(surface, timeline, phases, logo, heart, t=2.8)
+    #draw(surface, foreground, timeline, phases, logo, heart, t=2.8)
     #surface.write_to_png('debug.png')
     
     t = 0
@@ -169,7 +168,7 @@ def animate(f: BinaryIO, resolution: Resolution, dt: float):
         #    frames.append(as_array(surface))
         #buffer = motion_blur(frames).tobytes()
         
-        draw(surface, timeline, phases, logo, heart, t)
+        draw(surface, foreground, timeline, phases, logo, heart, t)
         buffer = surface.get_data()
         f.write(buffer)
         t += dt
