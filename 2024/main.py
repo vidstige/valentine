@@ -57,7 +57,7 @@ def draw(
     target: cairo.ImageSurface,
     foreground: cairo.Pattern,
     timeline: Timeline,
-    phases: List[float],
+    rngs: List[float],
     logo: List[Polygon],
     heart: List[Polygon],
     t: float,
@@ -68,10 +68,11 @@ def draw(
     #ctx.set_source_rgb(0.8, 0.8, 0.8)
     ctx.set_source(foreground)
 
-    for phase, logo_piece, heart_piece in zip(phases, logo, heart):
+    for rng, logo_piece, heart_piece in zip(rngs, logo, heart):
+        phase = rng * 3
         # draw heart piece
         if not heart_piece.is_empty:
-            y = timeline.tag('heart.y')((t + phase * 3) % timeline.duration())
+            y = timeline.tag('heart.y')((t + phase) % timeline.duration())
             ctx.set_matrix(eye)
             ctx.translate(0, y)
             # rotate around center
@@ -85,7 +86,7 @@ def draw(
         # draw logo piece
         if not logo_piece.is_empty:
             ctx.set_matrix(eye)
-            y = timeline.tag('logo.y')((t + phase * 3) % timeline.duration())
+            y = timeline.tag('logo.y')((t + phase) % timeline.duration())
             ctx.translate(0, y)
             draw_polygon(ctx, logo_piece)
             ctx.fill()
@@ -140,8 +141,8 @@ def animate(f: BinaryIO, resolution: Resolution, dt: float):
         Constant(height, duration=0.5),
     ]))
 
-    # phases
-    phases = [random.random() for _ in range(tony.area(grid))]
+    # each location has a random value called "rng" for it's properties
+    rngs = [random.random() for _ in range(tony.area(grid))]
 
     width, height = resolution
     surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)
@@ -168,7 +169,7 @@ def animate(f: BinaryIO, resolution: Resolution, dt: float):
         #    frames.append(as_array(surface))
         #buffer = motion_blur(frames).tobytes()
         
-        draw(surface, foreground, timeline, phases, logo, heart, t)
+        draw(surface, foreground, timeline, rngs, logo, heart, t)
         buffer = surface.get_data()
         f.write(buffer)
         t += dt
