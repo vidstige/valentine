@@ -63,7 +63,7 @@ def draw(
     t: float,
 ) -> None:
     assert len(logo) == len(heart)
-    eye = cairo.Matrix()
+    camera = cairo.Matrix()
     ctx = cairo.Context(target)
     ctx.set_source(foreground)
 
@@ -79,7 +79,7 @@ def draw(
         # draw heart piece
         if not heart_piece.is_empty:
             y = timeline.tag('heart.y')((t + phase) % timeline.duration())
-            ctx.set_matrix(eye)
+            ctx.set_matrix(camera)
             ctx.translate(0, y)
             # rotate around center
             center = heart_piece.centroid
@@ -91,7 +91,7 @@ def draw(
 
         # draw logo piece
         if not logo_piece.is_empty:
-            ctx.set_matrix(eye)
+            ctx.set_matrix(camera)
             y = timeline.tag('logo.y')((t + phase) % timeline.duration())
             ctx.translate(0, y)
             draw_polygon(ctx, logo_piece)
