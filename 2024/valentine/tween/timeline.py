@@ -1,47 +1,35 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List, Sequence, Tuple
+from typing import Callable, Dict, List, Sequence, Tuple
+
+from . import tweens
+
+
+def lerp(a: float, b: float, t: float) -> float:
+    return (1 - t) * a + t * b
 
 
 class Tween(ABC):
-    duration: float
+    f: Callable[[float], float]
+    def __init__(self, start: float, stop: float, duration: float = 1) -> None:
+        self.start = start
+        self.stop = stop
+        self.duration = duration
 
-    @abstractmethod
     def __call__(self, t: float) -> float:
-        pass
+        normalized_t = t / self.duration
+        return lerp(self.start, self.stop, self.__class__.f(normalized_t))
 
 
 class Linear(Tween):
-    def __init__(self, start: float, stop: float, duration: float = 1) -> None:
-        self.start = start
-        self.stop = stop
-        self.duration = duration
-
-    def __call__(self, t: float) -> float:
-        nt = t / self.duration
-        return (1 - nt) * self.start + nt * self.stop
+    f = tweens.linear
 
 
 class EaseInQuad(Tween):
-    def __init__(self, start: float, stop: float, duration: float = 1) -> None:
-        self.start = start
-        self.stop = stop
-        self.duration = duration
-
-    def __call__(self, t: float) -> float:
-        nt = t / self.duration
-        return (1 - nt*nt) * self.start + nt*nt * self.stop
+    f = tweens.ease_in_quad
 
 
 class EaseOutQuad(Tween):
-    def __init__(self, start: float, stop: float, duration: float = 1) -> None:
-        self.start = start
-        self.stop = stop
-        self.duration = duration
-
-    def __call__(self, t: float) -> float:
-        nt = t / self.duration
-        tmp = -nt * (t - 2)
-        return (1 - tmp) * self.start + tmp * self.stop
+    f = tweens.ease_out_quad
 
 
 class Constant(Tween):
