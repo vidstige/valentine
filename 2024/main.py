@@ -158,6 +158,11 @@ def animate(f: BinaryIO, resolution: Resolution, dt: float):
     background.add_color_stop_rgb(0, *parse_color('#ECE9E6'))
     background.add_color_stop_rgb(1, *parse_color('#FFFFFF'))
 
+    # thumb
+    #clear(surface, background)
+    #draw(surface, timeline, phases, logo, heart, t=2.8)
+    #surface.write_to_png('debug.png')
+    
     t = 0
     duration = timeline.duration()
     while t < duration:
